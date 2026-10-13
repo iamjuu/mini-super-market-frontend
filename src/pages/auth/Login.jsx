@@ -357,7 +357,7 @@ export const Login = ({ onBackToHome }) => {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="shamilalsalhya@gmail.com"
+                    placeholder="Enter email"
                     className="w-full px-4 py-3.5 rounded-xl bg-[#F0F5FA] border border-transparent text-[#181C2E] text-xs font-bold placeholder:text-[#A0A5BA] focus:outline-none focus:bg-white focus:border-[#18308c] transition-all"
                   />
                 </div>
