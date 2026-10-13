@@ -52,6 +52,17 @@ export const PlatformProvider = ({ children }) => {
     document.documentElement.style.setProperty('--accent-orange-hover', `${secondary}e6`);
     document.documentElement.style.setProperty('--brand-orange', secondary);
 
+    // Sync browser tab favicon and title with supermarket branding
+    const iconUrl = appearance?.logoUrl || '/al-salhiya-logo.jpg';
+    const favicons = document.querySelectorAll("link[rel*='icon']");
+    favicons.forEach((el) => {
+      el.href = iconUrl;
+    });
+
+    if (appearance?.platformName) {
+      document.title = `${appearance.platformName} — Digital Supermarket Catalog (الصالحية)`;
+    }
+
     try {
       localStorage.setItem('app_appearance', JSON.stringify(appearance));
     } catch (_) {}
