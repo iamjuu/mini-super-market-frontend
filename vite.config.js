@@ -14,25 +14,17 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        // target: 'http://localhost:5000', // Local backend (commented out)
+        target: 'https://super-market-backend-zeta.vercel.app', // Live Vercel Production Backend
         changeOrigin: true,
-        configure: (proxy) => {
-          proxy.on('error', (err, _req, res) => {
-            if (!res.headersSent) {
-              res.writeHead(503, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({
-                success: false,
-                code: 'BACKEND_OFFLINE',
-                message: 'Backend server is not running on port 5000. Please start your backend server (npm run dev in the server directory).',
-              }));
-            }
-          });
-        },
+        secure: false,
       },
       '/socket.io': {
-        target: 'http://localhost:5000',
+        // target: 'http://localhost:5000', // Local backend (commented out)
+        target: 'https://super-market-backend-zeta.vercel.app', // Live Vercel Production Backend
         ws: true,
         changeOrigin: true,
+        secure: false,
       }
     }
   }

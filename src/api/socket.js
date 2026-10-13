@@ -2,11 +2,11 @@ import { io } from 'socket.io-client';
 
 let socket = null;
 
-// Directly connect to backend server on port 5000 for guaranteed websocket connection
-const SOCKET_SERVER_URL =
-  typeof window !== 'undefined' && window.location.hostname === 'localhost'
-    ? 'http://localhost:5000'
-    : '/';
+// Local socket URL (commented out)
+// const SOCKET_SERVER_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000' : '/';
+
+// Live Production Vercel Backend URL
+const SOCKET_SERVER_URL = 'https://super-market-backend-zeta.vercel.app';
 
 export const getSocket = () => {
   if (!socket) {

@@ -1,4 +1,10 @@
-const API_BASE_URL = '/api';
+// Local API URL (commented out)
+// const API_BASE_URL = 'http://localhost:5000/api';
+// const API_BASE_URL = '/api';
+
+// Live Production Vercel Backend URL
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || 'https://super-market-backend-zeta.vercel.app/api';
 
 export const getToken = () => {
   return localStorage.getItem('token') || '';
