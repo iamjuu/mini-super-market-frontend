@@ -357,7 +357,7 @@ export const Login = ({ onBackToHome }) => {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="a@gmail.com"
+                    placeholder="shamilalsalhya@gmail.com"
                     className="w-full px-4 py-3.5 rounded-xl bg-[#F0F5FA] border border-transparent text-[#181C2E] text-xs font-bold placeholder:text-[#A0A5BA] focus:outline-none focus:bg-white focus:border-[#18308c] transition-all"
                   />
                 </div>
@@ -421,29 +421,6 @@ export const Login = ({ onBackToHome }) => {
                 >
                   {isLoading ? 'AUTHENTICATING...' : 'SIGN IN TO ADMIN PORTAL'}
                 </button>
-
-                {/* Quick test credentials reminder */}
-                <div className="p-3.5 rounded-2xl bg-blue-50/80 border border-blue-200/80 text-[11px] space-y-2">
-                  <p className="font-bold text-[#18308c] flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    Quick Admin One-Click Login:
-                  </p>
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEmail('a@gmail.com');
-                        setPassword('123');
-                        setLocalError(null);
-                      }}
-                      className="w-full p-3 rounded-xl bg-white border-2 border-blue-200 hover:border-[#18308c] text-left transition-all group shadow-xs hover:shadow-md cursor-pointer"
-                    >
-                      <span className="block font-black text-[#181C2E] group-hover:text-[#18308c] text-xs">⚡ Administrator Console</span>
-                      <span className="block text-slate-500 font-mono text-[10px] mt-0.5 truncate">a@gmail.com (Password: 123)</span>
-                      <span className="block text-[#18308c] font-mono text-[10px] font-bold mt-1">Manage Products, Categories &amp; Store</span>
-                    </button>
-                  </div>
-                </div>
               </form>
             )}
 
