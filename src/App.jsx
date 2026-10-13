@@ -17,15 +17,25 @@ import { ProductDetailPage } from './pages/user/product/ProductDetailPage';
 // Operations & Catalog Admin Components
 import { AdminRoutes } from './pages/admin';
 
+// Error Experience Components
+import { NotFoundPage, ServerErrorPage, ErrorBoundary } from './pages/error';
+
 const AdminRouter = () => {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
   
-  // URL pathname sync: supports /admin/*, /login, /about, /shop, /news, /contact, /profile, /orders, /product/:id, /
+  // URL pathname sync: supports /admin/*, /login, /about, /shop, /news, /contact, /profile, /orders, /product/:id, /404, /500, /
   const getRouteFromUrl = () => {
     if (typeof window === 'undefined') return 'home';
     const path = window.location.pathname.replace(/^\/+/, '');
 
-    // 1. Check if path is a dedicated admin route (e.g. /admin, /admin/dashboard, etc.)
+    // 0. Dedicated testing routes for error pages
+    if (path === '404' || path === 'not-found') return '404';
+    if (path === '500' || path === 'server-error') return '500';
+
+    // 1. Root storefront home
+    if (!path || path === '') return 'home';
+
+    // 2. Check if path is a dedicated admin route (e.g. /admin, /admin/dashboard, etc.)
     if (path === 'admin' || path === 'admin/') {
       return 'admin/dashboard';
     }
@@ -47,12 +57,16 @@ const AdminRouter = () => {
     }
     if (window.location.hash) {
       const hash = window.location.hash.replace(/^#\/?/, '');
+      if (hash === '404' || hash === 'not-found') return '404';
+      if (hash === '500' || hash === 'server-error') return '500';
       if (hash === 'admin' || hash === 'admin/' || hash.toLowerCase() === 'dashboard') return 'admin/dashboard';
       if (hash.startsWith('admin/')) return hash;
       if (validRoutes.includes(hash.toLowerCase())) return hash.toLowerCase();
       if (hash.toLowerCase().startsWith('product/')) return hash;
     }
-    return 'home';
+
+    // Any unmatched subpath resolves to 404 Not Found
+    return '404';
   };
 
   const [currentRoute, setCurrentRoute] = useState(getRouteFromUrl);
@@ -161,12 +175,32 @@ const AdminRouter = () => {
   };
 
   const renderCurrentPortal = () => {
-    // 1. Explicit login route
+    // 1. Explicit 404 Route
+    if (currentRoute === '404') {
+      return (
+        <NotFoundPage
+          onNavigate={navigateTo}
+          attemptedPath={typeof window !== 'undefined' ? window.location.pathname : ''}
+        />
+      );
+    }
+
+    // 2. Explicit 500 Route
+    if (currentRoute === '500') {
+      return (
+        <ServerErrorPage
+          onNavigate={navigateTo}
+          resetErrorBoundary={handleRefresh}
+        />
+      );
+    }
+
+    // 3. Explicit login route
     if (currentRoute === 'login') {
       return <Login onBackToHome={() => navigateTo('home')} />;
     }
 
-    // 2. ADMIN PORTAL: Only rendered when visiting dedicated admin routes (/admin, /admin/dashboard, etc.)
+    // 4. ADMIN PORTAL: Only rendered when visiting dedicated admin routes (/admin, /admin/dashboard, etc.)
     const isAdminRoute = currentRoute === 'admin' || currentRoute.startsWith('admin/');
     if (isAdminRoute) {
       if (!isAuthenticated || isUserType !== 'admin') {
@@ -184,7 +218,7 @@ const AdminRouter = () => {
       );
     }
 
-    // 3. Fallback for profile / orders (no user login needed, route to home)
+    // 5. Fallback for profile / orders (no user login needed, route to home)
     if (currentRoute === 'profile' || currentRoute === 'orders') {
       return (
         <UserLayout
@@ -197,7 +231,7 @@ const AdminRouter = () => {
       );
     }
 
-    // 4. Default / Initial / Storefront Home Portal (UserLayout)
+    // 6. Default / Initial / Storefront Home Portal (UserLayout)
     return (
       <UserLayout
         currentRoute={currentRoute}
@@ -207,27 +241,6 @@ const AdminRouter = () => {
         {renderUserContent()}
       </UserLayout>
     );
-
-    // Fallback
-    return (
-      <div className="min-h-screen bg-[#F8F9FD] flex items-center justify-center p-4">
-        <div className="bg-white p-8 rounded-3xl border border-slate-200 text-center max-w-md space-y-4 shadow-xl">
-          <div className="w-12 h-12 rounded-2xl bg-orange-50 text-[#FF7622] mx-auto flex items-center justify-center">
-            <ShieldAlert className="w-6 h-6" />
-          </div>
-          <h2 className="text-lg font-bold text-[#181C2E]">Unknown User Role</h2>
-          <p className="text-xs text-[#646982] leading-relaxed">
-            Your authenticated role is <code className="text-[#FF7622] font-bold">{user?.role}</code>.
-          </p>
-          <button
-            onClick={logout}
-            className="px-4 py-2 rounded-xl bg-[#FF7622] hover:bg-[#E56314] text-xs font-bold text-white transition-all shadow-md"
-          >
-            Sign In Again
-          </button>
-        </div>
-      </div>
-    );
   };
 
   return renderCurrentPortal();
@@ -235,12 +248,14 @@ const AdminRouter = () => {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <PlatformProvider>
-        <CartProvider>
-          <AdminRouter />
-        </CartProvider>
-      </PlatformProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <PlatformProvider>
+          <CartProvider>
+            <AdminRouter />
+          </CartProvider>
+        </PlatformProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
