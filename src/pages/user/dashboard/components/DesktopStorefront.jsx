@@ -477,22 +477,22 @@ export const DesktopStorefront = ({ onNavigate }) => {
                 return (
                   <div
                     key={offer._id || idx}
-                    className="relative rounded-2xl overflow-hidden p-5 text-white bg-gradient-to-br from-[#18308C] via-[#1c39a3] to-[#FF7824] shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between group"
+                    className="relative rounded-2xl overflow-hidden p-5 bg-white border-2 border-[#18308C] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 pr-1">
-                        <span className="inline-block px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-[10px] font-black uppercase mb-2 shadow-2xs">
+                        <span className="inline-block px-2.5 py-0.5 rounded-full bg-[#18308C]/10 text-[#18308C] text-[10px] font-black uppercase mb-2 border border-[#18308C]/15">
                           {offer.tagBadge || '⭐ Special Offer'}
                         </span>
-                        <h3 className="text-sm font-black text-white line-clamp-2 leading-tight group-hover:text-amber-200 transition-colors">
+                        <h3 className="text-sm font-black text-[#0E1D4A] line-clamp-2 leading-tight group-hover:text-[#FF7824] transition-colors">
                           {offer.title}
                         </h3>
-                        <p className="text-[11px] text-white/85 line-clamp-2 mt-1">
+                        <p className="text-[11px] text-[#5E6B8C] line-clamp-2 mt-1 font-medium">
                           {offer.description || 'Promotional deal available in-store.'}
                         </p>
                       </div>
 
-                      <div className="w-16 h-16 rounded-xl overflow-hidden bg-white/10 shrink-0 border border-white/20 shadow-inner">
+                      <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-50 shrink-0 border border-slate-200 shadow-xs">
                         <img
                           src={bannerImg}
                           alt={offer.title}
@@ -501,18 +501,18 @@ export const DesktopStorefront = ({ onNavigate }) => {
                       </div>
                     </div>
 
-                    <div className="mt-4 pt-3 border-t border-white/15 flex items-center justify-between">
+                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
                       <div className="flex items-baseline space-x-2">
-                        <span className="text-base font-black text-white">
+                        <span className="text-base font-black text-[#18308C]">
                           ₹{offer.offerPrice}
                         </span>
                         {offer.actualPrice && Number(offer.actualPrice) > Number(offer.offerPrice) && (
-                          <span className="text-xs text-white/70 line-through">
+                          <span className="text-xs text-slate-400 line-through">
                             ₹{offer.actualPrice}
                           </span>
                         )}
                         {discount && (
-                          <span className="px-1.5 py-0.5 rounded-md bg-white text-[#FF7824] text-[10px] font-black">
+                          <span className="px-1.5 py-0.5 rounded-md bg-orange-100 text-[#FF7824] text-[10px] font-black border border-orange-200/60">
                             -{discount}%
                           </span>
                         )}
@@ -527,14 +527,14 @@ export const DesktopStorefront = ({ onNavigate }) => {
                             el?.scrollIntoView({ behavior: 'smooth' });
                           }
                         }}
-                        className="px-3 py-1.5 rounded-full bg-white text-[#18308C] text-[10px] font-black hover:bg-orange-50 active:scale-95 transition-all shadow-xs"
+                        className="px-3.5 py-1.5 rounded-full bg-[#18308C] text-white text-[10px] font-black hover:bg-[#FF7824] active:scale-95 transition-all shadow-xs"
                       >
                         View Deal
                       </button>
                     </div>
 
                     {/* Decorative subtle ambient shape */}
-                    <div className="absolute -bottom-8 -right-8 w-24 h-24 rounded-full bg-white/10 pointer-events-none" />
+                    <div className="absolute -bottom-8 -right-8 w-24 h-24 rounded-full bg-[#18308C]/5 pointer-events-none" />
                   </div>
                 );
               })}
