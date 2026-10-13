@@ -10,7 +10,6 @@ import {
   Sparkles,
   Compass,
   ChevronRight,
-  ShieldAlert,
 } from 'lucide-react';
 
 export const NotFoundPage = ({ onNavigate, attemptedPath = '' }) => {
@@ -22,10 +21,6 @@ export const NotFoundPage = ({ onNavigate, attemptedPath = '' }) => {
       onNavigate('shop');
     }
   };
-
-  const isAdminPath =
-    attemptedPath.includes('admin') ||
-    (typeof window !== 'undefined' && window.location.pathname.includes('admin'));
 
   const popularAisles = [
     {
@@ -164,25 +159,14 @@ export const NotFoundPage = ({ onNavigate, attemptedPath = '' }) => {
             <span>Take Me Home (الرئيسية)</span>
           </button>
 
-          {isAdminPath ? (
-            <button
-              id="btn-404-admin-login"
-              onClick={() => (onNavigate ? onNavigate('admin/dashboard/login-admin') : (window.location.href = '/admin/dashboard/login-admin'))}
-              className="inline-flex items-center space-x-2 px-5 py-3 rounded-2xl bg-[#18308c] text-white font-bold text-sm shadow-md hover:bg-[#122470] hover:-translate-y-0.5 transition-all"
-            >
-              <ShieldAlert className="w-4 h-4 text-amber-300" />
-              <span>Admin Portal Login</span>
-            </button>
-          ) : (
-            <button
-              id="btn-404-catalog"
-              onClick={() => (onNavigate ? onNavigate('shop') : (window.location.href = '/shop'))}
-              className="inline-flex items-center space-x-2 px-5 py-3 rounded-2xl bg-white text-[#18308c] font-bold text-sm border border-indigo-100 shadow-sm hover:bg-indigo-50/50 transition-all hover:-translate-y-0.5"
-            >
-              <Store className="w-4 h-4 text-[#ff7824]" />
-              <span>Browse Catalog</span>
-            </button>
-          )}
+          <button
+            id="btn-404-catalog"
+            onClick={() => (onNavigate ? onNavigate('shop') : (window.location.href = '/shop'))}
+            className="inline-flex items-center space-x-2 px-5 py-3 rounded-2xl bg-white text-[#18308c] font-bold text-sm border border-indigo-100 shadow-sm hover:bg-indigo-50/50 transition-all hover:-translate-y-0.5"
+          >
+            <Store className="w-4 h-4 text-[#ff7824]" />
+            <span>Browse Catalog</span>
+          </button>
         </div>
 
         {/* Popular Aisles Grid */}

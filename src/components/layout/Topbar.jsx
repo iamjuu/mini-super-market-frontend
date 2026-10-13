@@ -52,7 +52,10 @@ export const Topbar = ({ currentRoute, onRefresh }) => {
             </div>
           </div>
           <button
-            onClick={logout}
+            onClick={async () => {
+              await logout();
+              window.location.href = '/';
+            }}
             title="Log Out"
             className="p-1.5 rounded-xl hover:bg-rose-50 text-[#8a87a6] hover:text-rose-600 transition-colors"
           >

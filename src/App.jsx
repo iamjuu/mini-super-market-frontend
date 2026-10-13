@@ -35,30 +35,20 @@ const AdminRouter = () => {
     // 1. Root storefront home
     if (!path || path === '') return 'home';
 
-    // 2. Dedicated Administrator Login Route:
-    // Matches /admin/dashboard/login-admin, /admin/login-admin, /admin/login, or /login
+    // 2. Strict Dedicated Administrator Login Route:
+    // ONLY display the login page when entering properly the complete URL: admin/dashboard/login-admin
     const cleanPath = path.toLowerCase().replace(/\/+$/, '');
-    if (
-      cleanPath === 'admin/dashboard/login-admin' ||
-      cleanPath === 'admin/login-admin' ||
-      cleanPath === 'admin/login' ||
-      cleanPath === 'login'
-    ) {
-      if (typeof window !== 'undefined' && cleanPath !== 'admin/dashboard/login-admin') {
-        window.history.replaceState(null, '', '/admin/dashboard/login-admin');
-      }
+    if (cleanPath === 'admin/dashboard/login-admin') {
       return 'login';
     }
 
     // 3. Dedicated admin operational routes (e.g. /admin, /admin/dashboard, etc.)
+    // Note: If unauthenticated, renderCurrentPortal will strictly show 404 Not Found.
     if (cleanPath === 'admin' || cleanPath === 'admin/dashboard') {
       return 'admin/dashboard';
     }
     if (cleanPath.startsWith('admin/')) {
       return cleanPath;
-    }
-    if (cleanPath === 'dashboard') {
-      return 'admin/dashboard';
     }
 
     const validRoutes = ['about', 'shop', 'news', 'contact', 'profile', 'orders', 'home'];
@@ -74,14 +64,14 @@ const AdminRouter = () => {
       const hash = window.location.hash.replace(/^#\/?/, '').toLowerCase().replace(/\/+$/, '');
       if (hash === '404' || hash === 'not-found') return '404';
       if (hash === '500' || hash === 'server-error') return '500';
-      if (hash === 'admin/dashboard/login-admin' || hash === 'admin/login-admin' || hash === 'login') return 'login';
-      if (hash === 'admin' || hash === 'dashboard') return 'admin/dashboard';
+      if (hash === 'admin/dashboard/login-admin') return 'login';
+      if (hash === 'admin' || hash === 'admin/dashboard') return 'admin/dashboard';
       if (hash.startsWith('admin/')) return hash;
       if (validRoutes.includes(hash)) return hash;
       if (hash.startsWith('product/')) return hash;
     }
 
-    // Any unmatched subpath resolves to 404 Not Found
+    // Any other URL (e.g. /login, /admin/login, /admin/login-admin, or invalid route) -> 404
     return '404';
   };
 
@@ -107,11 +97,18 @@ const AdminRouter = () => {
       targetRoute = 'admin/dashboard';
     }
 
+    if (targetRoute === 'admin/dashboard/login-admin' || targetRoute === 'login') {
+      setCurrentRoute('login');
+      if (typeof window !== 'undefined') {
+        window.history.pushState(null, '', '/admin/dashboard/login-admin');
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     setCurrentRoute(targetRoute);
     if (typeof window !== 'undefined') {
-      if (targetRoute === 'login') {
-        window.history.pushState(null, '', '/admin/dashboard/login-admin');
-      } else if (targetRoute === 'home') {
+      if (targetRoute === 'home') {
         window.history.pushState(null, '', '/');
       } else if (targetRoute === 'dashboard') {
         if (user?.role === 'ADMIN' || user?.isUser === 'admin') {
@@ -141,10 +138,7 @@ const AdminRouter = () => {
       const currentPath = typeof window !== 'undefined' ? window.location.pathname.replace(/^\/+/, '').toLowerCase().replace(/\/+$/, '') : '';
       if (
         currentRoute === 'login' ||
-        currentPath === 'login' ||
-        currentPath === 'admin/dashboard/login-admin' ||
-        currentPath === 'admin/login-admin' ||
-        currentPath === 'admin/login'
+        currentPath === 'admin/dashboard/login-admin'
       ) {
         if (isUserType === 'admin') {
           navigateTo('admin/dashboard');
@@ -217,22 +211,23 @@ const AdminRouter = () => {
       );
     }
 
-    // 3. Explicit login route
+    // 3. Strict Administrator Login Route:
+    // ONLY rendered when visiting the exact complete URL: /admin/dashboard/login-admin
     if (currentRoute === 'login') {
-      if (typeof window !== 'undefined' && window.location.pathname !== '/admin/dashboard/login-admin') {
-        window.history.replaceState(null, '', '/admin/dashboard/login-admin');
-      }
       return <Login onBackToHome={() => navigateTo('home')} />;
     }
 
     // 4. ADMIN PORTAL: Only rendered when visiting dedicated admin routes (/admin, /admin/dashboard, etc.)
     const isAdminRoute = currentRoute === 'admin' || currentRoute.startsWith('admin/');
     if (isAdminRoute) {
+      // If NOT authenticated as admin, strictly show 404 Not Found! Do NOT show login or redirect.
       if (!isAuthenticated || isUserType !== 'admin') {
-        if (typeof window !== 'undefined' && window.location.pathname !== '/admin/dashboard/login-admin') {
-          window.history.replaceState(null, '', '/admin/dashboard/login-admin');
-        }
-        return <Login onBackToHome={() => navigateTo('home')} />;
+        return (
+          <NotFoundPage
+            onNavigate={navigateTo}
+            attemptedPath={typeof window !== 'undefined' ? window.location.pathname : ''}
+          />
+        );
       }
 
       return (
