@@ -20,6 +20,7 @@ import {
   X,
   Smartphone,
   Layers,
+  Loader2,
 } from 'lucide-react';
 import ApiClient from '../../../api/client';
 import { ConfirmDialog } from '../../../components/common/Modal';
@@ -148,17 +149,34 @@ export const OffersList = () => {
     window.dispatchEvent(new Event('app_offers_updated'));
   };
 
-  // Image Upload handler (file to base64)
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+  // Image Upload handler (file to Cloudinary)
   const handleImageUpload = (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert('File size exceeds 5MB limit. Please choose a smaller photo.');
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File size exceeds 10MB limit. Please choose a smaller photo.');
         return;
       }
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData((prev) => ({ ...prev, image: reader.result }));
+      reader.onloadend = async () => {
+        setIsUploadingImage(true);
+        try {
+          const res = await ApiClient.post('/upload', {
+            image: reader.result,
+            folder: 'shamil_marketplace/offers',
+          });
+          if (res?.data?.url) {
+            setFormData((prev) => ({ ...prev, image: res.data.url }));
+          } else {
+            setFormData((prev) => ({ ...prev, image: reader.result }));
+          }
+        } catch {
+          setFormData((prev) => ({ ...prev, image: reader.result }));
+        } finally {
+          setIsUploadingImage(false);
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -436,11 +454,21 @@ export const OffersList = () => {
                 {/* Upload Button */}
                 <label className="flex flex-col items-center justify-center p-4 rounded-2xl border-2 border-dashed border-slate-200 hover:border-[#FF7824] bg-[#f8f9fd] hover:bg-orange-50/50 cursor-pointer transition-all text-center group">
                   <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shadow-xs text-[#FF7824] mb-1.5 group-hover:scale-110 transition-transform">
-                    <Upload className="w-4 h-4" />
+                    {isUploadingImage ? <Loader2 className="w-4 h-4 animate-spin text-[#FF7824]" /> : <Upload className="w-4 h-4" />}
                   </div>
-                  <span className="text-xs font-bold text-[#181829]">Choose Local File</span>
-                  <span className="text-[10px] text-slate-400 mt-0.5">PNG, JPG, WEBP (Max 5MB)</span>
-                  <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                  <span className="text-xs font-bold text-[#181829]">
+                    {isUploadingImage ? 'Uploading to Cloudinary...' : 'Choose Local File'}
+                  </span>
+                  <span className="text-[10px] text-slate-400 mt-0.5">
+                    {isUploadingImage ? 'Please wait...' : 'PNG, JPG, WEBP (Cloudinary auto-optimized)'}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    disabled={isUploadingImage}
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
                 </label>
 
                 {/* Direct URL */}

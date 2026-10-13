@@ -20,6 +20,7 @@ import {
   ArrowLeft,
   Building,
   Upload,
+  Loader2,
 } from 'lucide-react';
 import ApiClient from '../../../api/client';
 import { Modal, ConfirmDialog } from '../../../components/common/Modal';
@@ -197,17 +198,34 @@ export const BrandsList = () => {
     fetchBrands();
   };
 
-  // Save Brand (Create or Update)
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+
+  // Save Brand Logo (file to Cloudinary)
   const handleLogoUpload = (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert('File size exceeds 5MB limit. Please choose a smaller logo.');
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File size exceeds 10MB limit. Please choose a smaller logo.');
         return;
       }
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData((prev) => ({ ...prev, logo: reader.result }));
+      reader.onloadend = async () => {
+        setIsUploadingLogo(true);
+        try {
+          const res = await ApiClient.post('/upload', {
+            image: reader.result,
+            folder: 'shamil_marketplace/brands',
+          });
+          if (res?.data?.url) {
+            setFormData((prev) => ({ ...prev, logo: res.data.url }));
+          } else {
+            setFormData((prev) => ({ ...prev, logo: reader.result }));
+          }
+        } catch {
+          setFormData((prev) => ({ ...prev, logo: reader.result }));
+        } finally {
+          setIsUploadingLogo(false);
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -465,11 +483,21 @@ export const BrandsList = () => {
                     />
                   </div>
                   <label className="flex items-center space-x-1.5 px-3 py-2 rounded-2xl bg-[#ece8ff] text-[#6339f4] hover:bg-[#6339f4] hover:text-white text-xs font-bold cursor-pointer transition-all border border-[#6339f4]/20">
-                    <Upload className="w-3.5 h-3.5" />
-                    <span>Upload</span>
+                    {isUploadingLogo ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Uploading...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Upload</span>
+                      </>
+                    )}
                     <input
                       type="file"
                       accept="image/*"
+                      disabled={isUploadingLogo}
                       onChange={handleLogoUpload}
                       className="hidden"
                     />

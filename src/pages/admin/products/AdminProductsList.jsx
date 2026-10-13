@@ -27,6 +27,7 @@ import {
   Store,
   Star,
   Upload,
+  Loader2,
 } from 'lucide-react';
 import ApiClient from '../../../api/client';
 import { ConfirmDialog, Modal } from '../../../components/common/Modal';
@@ -218,23 +219,43 @@ export const AdminProductsList = ({ onNavigate }) => {
     setFormSubcategories(filteredSubs);
   };
 
+  const [uploadingSlot, setUploadingSlot] = useState(null);
+
   // Upload image from user device for product photo slots
   const handleProductImageUpload = (slotIndex, e) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert('File size exceeds 5MB limit. Please choose a smaller photo.');
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File size exceeds 10MB limit. Please choose a smaller photo.');
         return;
       }
       const reader = new FileReader();
-      reader.onloadend = () => {
-        const next = [...(formData.images || ['', '', ''])];
-        next[slotIndex] = reader.result;
-        setFormData((prev) => ({
-          ...prev,
-          images: next,
-          image: next[0] || reader.result,
-        }));
+      reader.onloadend = async () => {
+        setUploadingSlot(slotIndex);
+        try {
+          const res = await ApiClient.post('/upload', {
+            image: reader.result,
+            folder: 'shamil_marketplace/products',
+          });
+          const uploadedUrl = res?.data?.url || reader.result;
+          const next = [...(formData.images || ['', '', ''])];
+          next[slotIndex] = uploadedUrl;
+          setFormData((prev) => ({
+            ...prev,
+            images: next,
+            image: next[0] || uploadedUrl,
+          }));
+        } catch {
+          const next = [...(formData.images || ['', '', ''])];
+          next[slotIndex] = reader.result;
+          setFormData((prev) => ({
+            ...prev,
+            images: next,
+            image: next[0] || reader.result,
+          }));
+        } finally {
+          setUploadingSlot(null);
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -815,11 +836,21 @@ export const AdminProductsList = ({ onNavigate }) => {
                             className="w-full px-2.5 py-1.5 text-xs bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#6030ea] font-medium"
                           />
                           <label className="flex items-center justify-center space-x-1.5 py-1 px-2 rounded-lg bg-gray-50 hover:bg-[#6030ea]/10 text-gray-600 hover:text-[#6030ea] text-[10px] font-bold cursor-pointer transition-colors border border-gray-200">
-                            <Upload className="w-3 h-3 text-[#6030ea]" />
-                            <span>Upload File</span>
+                            {uploadingSlot === idx ? (
+                              <>
+                                <Loader2 className="w-3 h-3 animate-spin text-[#6030ea]" />
+                                <span className="text-[#6030ea]">Uploading to Cloudinary...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="w-3 h-3 text-[#6030ea]" />
+                                <span>Upload File</span>
+                              </>
+                            )}
                             <input
                               type="file"
                               accept="image/*"
+                              disabled={uploadingSlot === idx}
                               onChange={(e) => handleProductImageUpload(idx, e)}
                               className="hidden"
                             />

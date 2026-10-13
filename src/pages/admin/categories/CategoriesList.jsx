@@ -34,6 +34,7 @@ import {
   FolderTree,
   Truck,
   Upload,
+  Loader2,
 } from 'lucide-react';
 import ApiClient from '../../../api/client';
 import { ConfirmDialog, Modal } from '../../../components/common/Modal';
@@ -380,16 +381,33 @@ export const CategoriesList = ({ defaultTab = 'categories' }) => {
     }
   };
 
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
   const handleCategoryImageUpload = (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert('File size exceeds 5MB limit. Please choose a smaller image.');
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File size exceeds 10MB limit. Please choose a smaller image.');
         return;
       }
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData((prev) => ({ ...prev, image: reader.result }));
+      reader.onloadend = async () => {
+        setIsUploadingImage(true);
+        try {
+          const res = await ApiClient.post('/upload', {
+            image: reader.result,
+            folder: 'shamil_marketplace/categories',
+          });
+          if (res?.data?.url) {
+            setFormData((prev) => ({ ...prev, image: res.data.url }));
+          } else {
+            setFormData((prev) => ({ ...prev, image: reader.result }));
+          }
+        } catch {
+          setFormData((prev) => ({ ...prev, image: reader.result }));
+        } finally {
+          setIsUploadingImage(false);
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -666,13 +684,18 @@ export const CategoriesList = ({ defaultTab = 'categories' }) => {
                     {/* File Upload Box */}
                     <label className="flex flex-col items-center justify-center p-4 rounded-2xl border-2 border-dashed border-slate-200 hover:border-[#6339f4] bg-[#f8f9fd] hover:bg-[#ece8ff]/30 cursor-pointer transition-all text-center group">
                       <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-xs text-[#6339f4] mb-2 group-hover:scale-110 transition-transform">
-                        <Upload className="w-5 h-5" />
+                        {isUploadingImage ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
                       </div>
-                      <span className="text-xs font-bold text-[#181829]">Choose Image File</span>
-                      <span className="text-[10px] text-slate-400 mt-0.5">PNG, JPG, WEBP (Max 5MB)</span>
+                      <span className="text-xs font-bold text-[#181829]">
+                        {isUploadingImage ? 'Uploading to Cloudinary...' : 'Choose Image File'}
+                      </span>
+                      <span className="text-[10px] text-slate-400 mt-0.5">
+                        {isUploadingImage ? 'Please wait...' : 'PNG, JPG, WEBP (Cloudinary auto-optimized)'}
+                      </span>
                       <input
                         type="file"
                         accept="image/*"
+                        disabled={isUploadingImage}
                         onChange={handleCategoryImageUpload}
                         className="hidden"
                       />
