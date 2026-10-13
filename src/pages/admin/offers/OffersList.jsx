@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import ApiClient from '../../../api/client';
 import { ConfirmDialog } from '../../../components/common/Modal';
+import { compressImage } from '../../../utils/imageCompressor';
 
 const DEFAULT_OFFERS = [
   {
@@ -152,33 +153,31 @@ export const OffersList = () => {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   // Image Upload handler (file to Cloudinary)
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        alert('File size exceeds 10MB limit. Please choose a smaller photo.');
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        setIsUploadingImage(true);
-        try {
-          const res = await ApiClient.post('/upload', {
-            image: reader.result,
-            folder: 'shamil_marketplace/offers',
-          });
-          if (res?.data?.url) {
-            setFormData((prev) => ({ ...prev, image: res.data.url }));
-          } else {
-            setFormData((prev) => ({ ...prev, image: reader.result }));
-          }
-        } catch {
-          setFormData((prev) => ({ ...prev, image: reader.result }));
-        } finally {
-          setIsUploadingImage(false);
+      setIsUploadingImage(true);
+      try {
+        const compressedBase64 = await compressImage(file, {
+          maxWidth: 1400,
+          maxHeight: 1400,
+          quality: 0.82,
+        });
+
+        const res = await ApiClient.post('/upload', {
+          image: compressedBase64,
+          folder: 'shamil_marketplace/offers',
+        });
+        if (res?.data?.url) {
+          setFormData((prev) => ({ ...prev, image: res.data.url }));
+        } else {
+          setFormData((prev) => ({ ...prev, image: compressedBase64 }));
         }
-      };
-      reader.readAsDataURL(file);
+      } catch (err) {
+        console.error('Failed to compress/upload offer banner:', err);
+      } finally {
+        setIsUploadingImage(false);
+      }
     }
   };
 

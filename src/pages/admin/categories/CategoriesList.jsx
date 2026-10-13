@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 import ApiClient from '../../../api/client';
 import { ConfirmDialog, Modal } from '../../../components/common/Modal';
+import { compressImage } from '../../../utils/imageCompressor';
 
 // Preset icon options for quick selection
 const ICON_OPTIONS = [
@@ -383,33 +384,32 @@ export const CategoriesList = ({ defaultTab = 'categories' }) => {
 
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
-  const handleCategoryImageUpload = (e) => {
+  const handleCategoryImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        alert('File size exceeds 10MB limit. Please choose a smaller image.');
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        setIsUploadingImage(true);
-        try {
-          const res = await ApiClient.post('/upload', {
-            image: reader.result,
-            folder: 'shamil_marketplace/categories',
-          });
-          if (res?.data?.url) {
-            setFormData((prev) => ({ ...prev, image: res.data.url }));
-          } else {
-            setFormData((prev) => ({ ...prev, image: reader.result }));
-          }
-        } catch {
-          setFormData((prev) => ({ ...prev, image: reader.result }));
-        } finally {
-          setIsUploadingImage(false);
+      setIsUploadingImage(true);
+      try {
+        // Compress image client-side (max 1000px, quality 0.82)
+        const compressedBase64 = await compressImage(file, {
+          maxWidth: 1000,
+          maxHeight: 1000,
+          quality: 0.82,
+        });
+
+        const res = await ApiClient.post('/upload', {
+          image: compressedBase64,
+          folder: 'shamil_marketplace/categories',
+        });
+        if (res?.data?.url) {
+          setFormData((prev) => ({ ...prev, image: res.data.url }));
+        } else {
+          setFormData((prev) => ({ ...prev, image: compressedBase64 }));
         }
-      };
-      reader.readAsDataURL(file);
+      } catch (err) {
+        console.error('Failed to compress/upload category image:', err);
+      } finally {
+        setIsUploadingImage(false);
+      }
     }
   };
 

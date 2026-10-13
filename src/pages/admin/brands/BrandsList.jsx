@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import ApiClient from '../../../api/client';
 import { Modal, ConfirmDialog } from '../../../components/common/Modal';
+import { compressImage } from '../../../utils/imageCompressor';
 
 const PRESET_BRANDS = [
   {
@@ -201,33 +202,31 @@ export const BrandsList = () => {
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
 
   // Save Brand Logo (file to Cloudinary)
-  const handleLogoUpload = (e) => {
+  const handleLogoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        alert('File size exceeds 10MB limit. Please choose a smaller logo.');
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        setIsUploadingLogo(true);
-        try {
-          const res = await ApiClient.post('/upload', {
-            image: reader.result,
-            folder: 'shamil_marketplace/brands',
-          });
-          if (res?.data?.url) {
-            setFormData((prev) => ({ ...prev, logo: res.data.url }));
-          } else {
-            setFormData((prev) => ({ ...prev, logo: reader.result }));
-          }
-        } catch {
-          setFormData((prev) => ({ ...prev, logo: reader.result }));
-        } finally {
-          setIsUploadingLogo(false);
+      setIsUploadingLogo(true);
+      try {
+        const compressedBase64 = await compressImage(file, {
+          maxWidth: 600,
+          maxHeight: 600,
+          quality: 0.85,
+        });
+
+        const res = await ApiClient.post('/upload', {
+          image: compressedBase64,
+          folder: 'shamil_marketplace/brands',
+        });
+        if (res?.data?.url) {
+          setFormData((prev) => ({ ...prev, logo: res.data.url }));
+        } else {
+          setFormData((prev) => ({ ...prev, logo: compressedBase64 }));
         }
-      };
-      reader.readAsDataURL(file);
+      } catch (err) {
+        console.error('Failed to compress/upload logo:', err);
+      } finally {
+        setIsUploadingLogo(false);
+      }
     }
   };
 

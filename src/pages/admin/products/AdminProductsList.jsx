@@ -32,6 +32,7 @@ import {
 import ApiClient from '../../../api/client';
 import { ConfirmDialog, Modal } from '../../../components/common/Modal';
 import { cn } from '../../../lib/utils';
+import { compressImage } from '../../../utils/imageCompressor';
 
 // Preset high quality product photography
 const PRESET_PRODUCT_IMAGES = [
@@ -222,42 +223,34 @@ export const AdminProductsList = ({ onNavigate }) => {
   const [uploadingSlot, setUploadingSlot] = useState(null);
 
   // Upload image from user device for product photo slots
-  const handleProductImageUpload = (slotIndex, e) => {
+  const handleProductImageUpload = async (slotIndex, e) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        alert('File size exceeds 10MB limit. Please choose a smaller photo.');
-        return;
+      setUploadingSlot(slotIndex);
+      try {
+        const compressedBase64 = await compressImage(file, {
+          maxWidth: 1200,
+          maxHeight: 1200,
+          quality: 0.82,
+        });
+
+        const res = await ApiClient.post('/upload', {
+          image: compressedBase64,
+          folder: 'shamil_marketplace/products',
+        });
+        const uploadedUrl = res?.data?.url || compressedBase64;
+        const next = [...(formData.images || ['', '', ''])];
+        next[slotIndex] = uploadedUrl;
+        setFormData((prev) => ({
+          ...prev,
+          images: next,
+          image: next[0] || uploadedUrl,
+        }));
+      } catch (err) {
+        console.error('Failed to compress/upload product image:', err);
+      } finally {
+        setUploadingSlot(null);
       }
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        setUploadingSlot(slotIndex);
-        try {
-          const res = await ApiClient.post('/upload', {
-            image: reader.result,
-            folder: 'shamil_marketplace/products',
-          });
-          const uploadedUrl = res?.data?.url || reader.result;
-          const next = [...(formData.images || ['', '', ''])];
-          next[slotIndex] = uploadedUrl;
-          setFormData((prev) => ({
-            ...prev,
-            images: next,
-            image: next[0] || uploadedUrl,
-          }));
-        } catch {
-          const next = [...(formData.images || ['', '', ''])];
-          next[slotIndex] = reader.result;
-          setFormData((prev) => ({
-            ...prev,
-            images: next,
-            image: next[0] || reader.result,
-          }));
-        } finally {
-          setUploadingSlot(null);
-        }
-      };
-      reader.readAsDataURL(file);
     }
   };
 
