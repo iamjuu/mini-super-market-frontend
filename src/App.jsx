@@ -43,12 +43,15 @@ const AdminRouter = () => {
     }
 
     // 3. Dedicated admin operational routes (e.g. /admin, /admin/dashboard, etc.)
-    // Note: If unauthenticated, renderCurrentPortal will strictly show 404 Not Found.
-    if (cleanPath === 'admin' || cleanPath === 'admin/dashboard') {
-      return 'admin/dashboard';
-    }
-    if (cleanPath.startsWith('admin/')) {
-      return cleanPath;
+    // If not authenticated with an active session token, immediately reject and return 404!
+    const hasAdminToken = typeof window !== 'undefined' && Boolean(localStorage.getItem('token'));
+    if (hasAdminToken) {
+      if (cleanPath === 'admin' || cleanPath === 'admin/dashboard') {
+        return 'admin/dashboard';
+      }
+      if (cleanPath.startsWith('admin/')) {
+        return cleanPath;
+      }
     }
 
     const validRoutes = ['about', 'shop', 'news', 'contact', 'profile', 'orders', 'home'];
@@ -65,13 +68,15 @@ const AdminRouter = () => {
       if (hash === '404' || hash === 'not-found') return '404';
       if (hash === '500' || hash === 'server-error') return '500';
       if (hash === 'admin/dashboard/login-admin') return 'login';
-      if (hash === 'admin' || hash === 'admin/dashboard') return 'admin/dashboard';
-      if (hash.startsWith('admin/')) return hash;
+      if (hasAdminToken) {
+        if (hash === 'admin' || hash === 'admin/dashboard') return 'admin/dashboard';
+        if (hash.startsWith('admin/')) return hash;
+      }
       if (validRoutes.includes(hash)) return hash;
       if (hash.startsWith('product/')) return hash;
     }
 
-    // Any other URL (e.g. /login, /admin/login, /admin/login-admin, or invalid route) -> 404
+    // Any other URL (e.g. /login, /admin/dashboard/, /admin, /admin/login, or invalid route) -> 404
     return '404';
   };
 
@@ -214,6 +219,18 @@ const AdminRouter = () => {
     // 3. Strict Administrator Login Route:
     // ONLY rendered when visiting the exact complete URL: /admin/dashboard/login-admin
     if (currentRoute === 'login') {
+      if (typeof window !== 'undefined') {
+        const currentClean = window.location.pathname.replace(/^\/+/, '').toLowerCase().replace(/\/+$/, '');
+        const hashClean = window.location.hash.replace(/^#\/?/, '').toLowerCase().replace(/\/+$/, '');
+        if (currentClean !== 'admin/dashboard/login-admin' && hashClean !== 'admin/dashboard/login-admin') {
+          return (
+            <NotFoundPage
+              onNavigate={navigateTo}
+              attemptedPath={window.location.pathname}
+            />
+          );
+        }
+      }
       return <Login onBackToHome={() => navigateTo('home')} />;
     }
 
