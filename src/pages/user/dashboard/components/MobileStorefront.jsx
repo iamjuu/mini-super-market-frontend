@@ -11,6 +11,8 @@ import {
   Layers,
   ChevronRight,
   ChevronLeft,
+  ChevronDown,
+  Globe,
   CheckCircle2,
   ArrowRight,
   User as UserIcon,
@@ -136,6 +138,8 @@ const DEAL_ACCENTS = [
   'text-[#7C3AED]',
 ];
 
+import { LANGUAGES, getTranslation, setAppLanguage, getAppLanguage } from '../../../../locales';
+
 export const MobileStorefront = ({ onNavigate }) => {
   const { user, isAuthenticated } = useAuth();
 
@@ -144,6 +148,42 @@ export const MobileStorefront = ({ onNavigate }) => {
   const [brands, setBrands] = useState([]);
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Language switcher state (English, Arabic, Hindi)
+  const [isLangOpen, setIsLangOpen] = useState(false);
+  const [selectedLang, setSelectedLang] = useState(getAppLanguage);
+  const langDropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleLangSync = (e) => {
+      if (e.detail) setSelectedLang(e.detail);
+    };
+    window.addEventListener('app_language_changed', handleLangSync);
+    return () => window.removeEventListener('app_language_changed', handleLangSync);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (langDropdownRef.current && !langDropdownRef.current.contains(e.target)) {
+        setIsLangOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, []);
+
+  const handleSelectLang = (code) => {
+    setSelectedLang(code);
+    setAppLanguage(code);
+    setIsLangOpen(false);
+  };
+
+  const currentLangObj = LANGUAGES.find((l) => l.code === selectedLang) || LANGUAGES[0];
+  const t = getTranslation(selectedLang);
 
   // Filter selections
   const [selectedCategoryId, setSelectedCategoryId] = useState('ALL');
@@ -468,6 +508,25 @@ export const MobileStorefront = ({ onNavigate }) => {
     });
   }, [products, categories, selectedCategoryId, selectedSubcategoryId, selectedBrand, searchQuery, activeTabFilter]);
 
+  // Show 8 items initially and load 8 more on "Show More"
+  const ITEMS_PER_PAGE = 8;
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+
+  // Reset to 8 when filters change
+  useEffect(() => {
+    setVisibleCount(ITEMS_PER_PAGE);
+  }, [selectedCategoryId, selectedSubcategoryId, selectedBrand, searchQuery, activeTabFilter]);
+
+  const displayedProducts = useMemo(() => {
+    return filteredProducts.slice(0, visibleCount);
+  }, [filteredProducts, visibleCount]);
+
+  const hasMore = visibleCount < filteredProducts.length;
+
+  const handleShowMore = () => {
+    setVisibleCount((prev) => prev + ITEMS_PER_PAGE);
+  };
+
   // Handle Category Click: selects category instantly, triggers bounce animation, and smoothly scrolls category bar to stand at top
   const handleSelectCategory = (catId) => {
     const nextCatId = selectedCategoryId === catId ? 'ALL' : catId;
@@ -522,10 +581,48 @@ export const MobileStorefront = ({ onNavigate }) => {
             </div>
           </div>
 
-          {/* Right Action: Store Badge */}
-          <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-white text-[11px] font-bold">
-            <Store className="w-3.5 h-3.5 text-amber-200" />
-            <span>In-Store Catalog</span>
+          {/* Right Action: Language Switch Dropdown (Identical Pill Design + English, Arabic, Hindi) */}
+          <div className="relative" ref={langDropdownRef}>
+            <button
+              type="button"
+              onClick={() => setIsLangOpen((prev) => !prev)}
+              aria-expanded={isLangOpen}
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-white text-[11px] font-bold hover:bg-white/25 active:scale-95 transition-all shadow-xs cursor-pointer select-none"
+            >
+              <Globe className="w-3.5 h-3.5 text-amber-200 shrink-0" />
+              <span>{currentLangObj.native}</span>
+              <ChevronDown className={cn("w-3 h-3 text-white/80 transition-transform duration-200", isLangOpen && "rotate-180")} />
+            </button>
+
+            {isLangOpen && (
+              <div className="absolute right-0 top-full mt-2 w-44 bg-white rounded-2xl shadow-xl border border-slate-100 p-1.5 z-50 text-slate-800 animate-in fade-in zoom-in-95 duration-150">
+                <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 mb-1">
+                  {t.selectLanguage}
+                </div>
+                {LANGUAGES.map((lang) => {
+                  const isSelected = selectedLang === lang.code;
+                  return (
+                    <button
+                      key={lang.code}
+                      type="button"
+                      onClick={() => handleSelectLang(lang.code)}
+                      className={cn(
+                        "w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-colors cursor-pointer",
+                        isSelected
+                          ? "bg-orange-50 text-[#FF7622] font-black"
+                          : "text-slate-700 hover:bg-slate-50 font-semibold"
+                      )}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs">{lang.native}</span>
+                        <span className="text-[10px] text-slate-400 font-normal">({lang.label})</span>
+                      </div>
+                      {isSelected && <Check className="w-3.5 h-3.5 text-[#FF7622]" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
 
@@ -537,7 +634,7 @@ export const MobileStorefront = ({ onNavigate }) => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search groceries, dairy, daily deals..."
+              placeholder={t.searchPlaceholder}
               className="w-full text-xs font-semibold bg-transparent placeholder:text-slate-400 focus:outline-none"
             />
             {searchQuery ? (
@@ -566,8 +663,8 @@ export const MobileStorefront = ({ onNavigate }) => {
               <Clock className="w-3.5 h-3.5" />
             </div>
             <div>
-              <span className="text-[10px] text-slate-400 block font-medium">Store Hours</span>
-              <span className="text-slate-800 font-black">Open 8 AM - 11 PM</span>
+              <span className="text-[10px] text-slate-400 block font-medium">{t.storeHours}</span>
+              <span className="text-slate-800 font-black">{t.openHours}</span>
             </div>
           </div>
 
@@ -576,8 +673,8 @@ export const MobileStorefront = ({ onNavigate }) => {
               <ShieldCheck className="w-3.5 h-3.5" />
             </div>
             <div>
-              <span className="text-[10px] text-slate-400 block font-medium">Verified Fresh</span>
-              <span className="text-slate-800 font-black">100% In-Store Fresh</span>
+              <span className="text-[10px] text-slate-400 block font-medium">{t.verifiedFresh}</span>
+              <span className="text-slate-800 font-black">{t.freshLabel}</span>
             </div>
           </div>
         </div>
@@ -590,7 +687,7 @@ export const MobileStorefront = ({ onNavigate }) => {
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center space-x-1.5">
             <Sparkles className="w-4 h-4 text-[#FF7622]" />
-            <h2 className="text-sm font-black text-[#1F2229]">Best Offers &amp; Deals</h2>
+            <h2 className="text-sm font-black text-[#1F2229]">{t.bestOffers}</h2>
           </div>
           <button
             onClick={() => setActiveTabFilter(prev => prev === 'BEST_OFFERS' ? 'ALL' : 'BEST_OFFERS')}
@@ -599,7 +696,7 @@ export const MobileStorefront = ({ onNavigate }) => {
               activeTabFilter === 'BEST_OFFERS' ? "text-[#FF7622] underline" : "text-slate-400"
             )}
           >
-            {activeTabFilter === 'BEST_OFFERS' ? 'Showing Deals' : 'View All'}
+            {activeTabFilter === 'BEST_OFFERS' ? t.showingDeals : t.viewAll}
           </button>
         </div>
 
@@ -674,7 +771,7 @@ export const MobileStorefront = ({ onNavigate }) => {
                               accentColor
                             )}
                           >
-                            View Deal
+                            {t.viewDeal}
                           </button>
                         </div>
                       </div>
@@ -844,13 +941,13 @@ export const MobileStorefront = ({ onNavigate }) => {
               {selectedCategoryId !== 'ALL'
                 ? `${categories.find(c => c._id === selectedCategoryId)?.name || 'Category'} Products`
                 : activeTabFilter === 'BEST_OFFERS'
-                  ? '⭐ Best Offers Only'
-                  : 'Supermarket Products'}
+                  ? t.bestOffersOnly
+                  : t.supermarketProducts}
             </h2>
             <span className="text-[10px] font-medium text-slate-400">
-              {selectedCategoryId === 'ALL' && !searchQuery.trim() && activeTabFilter === 'ALL'
-                ? `1st product from each category (${filteredProducts.length} items)`
-                : `Showing ${filteredProducts.length} items`}
+              {filteredProducts.length > ITEMS_PER_PAGE
+                ? `${t.showing} ${displayedProducts.length} ${t.of} ${filteredProducts.length} ${t.items}`
+                : `${t.showing} ${filteredProducts.length} ${t.items}`}
             </span>
           </div>
 
@@ -865,7 +962,7 @@ export const MobileStorefront = ({ onNavigate }) => {
               }}
               className="text-[10px] font-black text-[#FF7622] uppercase tracking-wider hover:underline"
             >
-              Reset
+              {t.reset}
             </button>
           )}
         </div>
@@ -937,96 +1034,122 @@ export const MobileStorefront = ({ onNavigate }) => {
           </div>
         ) : (
           /* 2-Column Grid with Fixed-Height Uniform Cards & Smooth Entrance Animation */
-          <div 
-            key={`${selectedCategoryId}-${selectedSubcategoryId}-${activeTabFilter}-${searchQuery}`}
-            className="grid grid-cols-2 gap-3 animate-products-in items-start"
-          >
-            {filteredProducts.map((p) => {
-              const prodImg = p.image || getProductFallbackImage(p.name);
-              const catName = p.categoryName || (typeof p.categoryId === 'object' ? p.categoryId?.name : '') || 'General';
-              const brandName = p.brandName || (typeof p.brandId === 'object' ? p.brandId?.name : '') || '';
-              const price = p.price || 0;
-              const mrp = p.mrp || 0;
+          <>
+            <div 
+              key={`${selectedCategoryId}-${selectedSubcategoryId}-${activeTabFilter}-${searchQuery}`}
+              className="grid grid-cols-2 gap-3 animate-products-in items-start"
+            >
+              {displayedProducts.map((p) => {
+                const prodImg = p.image || getProductFallbackImage(p.name);
+                const catName = p.categoryName || (typeof p.categoryId === 'object' ? p.categoryId?.name : '') || 'General';
+                const brandName = p.brandName || (typeof p.brandId === 'object' ? p.brandId?.name : '') || '';
+                const price = p.price || 0;
+                const mrp = p.mrp || 0;
 
-              return (
-                <div
-                  key={p._id}
-                  className="bg-white rounded-2xl p-2.5 border border-slate-200/90 shadow-2xs hover:shadow-md active:scale-[0.98] transition-all duration-200 flex flex-col justify-between h-full group"
-                >
-                  <div className="flex-1 flex flex-col">
-                    {/* Fixed Height Uniform Product Image Frame */}
-                    <div
-                      onClick={() => onNavigate?.(`product/${p._id}`)}
-                      className="relative rounded-xl overflow-hidden bg-slate-100 h-36 w-full flex items-center justify-center cursor-pointer mb-2 shrink-0 group-hover:scale-[1.01] transition-transform"
-                    >
-                      <img
-                        src={prodImg}
-                        alt={p.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
-                      />
+                return (
+                  <div
+                    key={p._id}
+                    className="bg-white rounded-2xl p-2.5 border border-slate-200/90 shadow-2xs hover:shadow-md active:scale-[0.98] transition-all duration-200 flex flex-col justify-between h-full group"
+                  >
+                    <div className="flex-1 flex flex-col">
+                      {/* Fixed Height Uniform Product Image Frame */}
+                      <div
+                        onClick={() => onNavigate?.(`product/${p._id}`)}
+                        className="relative rounded-xl overflow-hidden bg-slate-100 h-36 w-full flex items-center justify-center cursor-pointer mb-2 shrink-0 group-hover:scale-[1.01] transition-transform"
+                      >
+                        <img
+                          src={prodImg}
+                          alt={p.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                        />
 
-                      {/* In-Stock Badge */}
-                      <div className="absolute top-1.5 left-1.5 bg-white/95 backdrop-blur-xs px-1.5 py-0.5 rounded-md text-[8px] font-black text-emerald-700 shadow-2xs border border-emerald-100 flex items-center space-x-1">
-                        <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
-                        <span>In Stock</span>
+                        {/* In-Stock Badge */}
+                        <div className="absolute top-1.5 left-1.5 bg-white/95 backdrop-blur-xs px-1.5 py-0.5 rounded-md text-[8px] font-black text-emerald-700 shadow-2xs border border-emerald-100 flex items-center space-x-1">
+                          <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
+                          <span>{t.inStock}</span>
+                        </div>
+
+                        {/* Best Offer Tag */}
+                        {p.isBestOffer && (
+                          <div className="absolute top-1.5 right-1.5 bg-[#FF5C38] px-1.5 py-0.5 rounded-md text-[8px] font-black text-white shadow-2xs flex items-center space-x-0.5">
+                            <Star className="w-2.5 h-2.5 fill-white" />
+                            <span>{t.deal}</span>
+                          </div>
+                        )}
                       </div>
 
-                      {/* Best Offer Tag */}
-                      {p.isBestOffer && (
-                        <div className="absolute top-1.5 right-1.5 bg-[#FF5C38] px-1.5 py-0.5 rounded-md text-[8px] font-black text-white shadow-2xs flex items-center space-x-0.5">
-                          <Star className="w-2.5 h-2.5 fill-white" />
-                          <span>Deal</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Category & Brand Tags */}
-                    <div className="flex items-center space-x-1 mb-1">
-                      <span className="px-1.5 py-0.5 rounded bg-orange-100 text-[#FF7622] text-[8px] font-black uppercase truncate max-w-[70px]">
-                        {catName}
-                      </span>
-                      {brandName && (
-                        <span className="text-[8px] text-slate-400 font-semibold truncate max-w-[60px]">
-                          {brandName}
+                      {/* Category & Brand Tags */}
+                      <div className="flex items-center space-x-1 mb-1">
+                        <span className="px-1.5 py-0.5 rounded bg-orange-100 text-[#FF7622] text-[8px] font-black uppercase truncate max-w-[70px]">
+                          {catName}
                         </span>
-                      )}
+                        {brandName && (
+                          <span className="text-[8px] text-slate-400 font-semibold truncate max-w-[60px]">
+                            {brandName}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Product Name */}
+                      <h3
+                        onClick={() => onNavigate?.(`product/${p._id}`)}
+                        className="font-black text-xs text-[#181C2E] hover:text-[#FF7622] transition-colors cursor-pointer line-clamp-2 leading-tight"
+                        title={p.name}
+                      >
+                        {p.name}
+                      </h3>
                     </div>
 
-                    {/* Product Name */}
-                    <h3
-                      onClick={() => onNavigate?.(`product/${p._id}`)}
-                      className="font-black text-xs text-[#181C2E] hover:text-[#FF7622] transition-colors cursor-pointer line-clamp-2 leading-tight"
-                      title={p.name}
-                    >
-                      {p.name}
-                    </h3>
-                  </div>
-
-                  {/* Price Row & Action Button */}
-                  <div className="pt-2 border-t border-slate-100 mt-2 flex items-center justify-between">
-                    <div>
-                      <span className="text-xs font-black text-[#18308C] block leading-tight">
-                        {price > 0 ? `₹${price}` : 'In Store'}
-                      </span>
-                      {mrp > price && (
-                        <span className="text-[9px] text-slate-400 line-through">
-                          ₹{mrp}
+                    {/* Price Row & Action Button */}
+                    <div className="pt-2 border-t border-slate-100 mt-2 flex items-center justify-between">
+                      <div>
+                        <span className="text-xs font-black text-[#18308C] block leading-tight">
+                          {price > 0 ? `₹${price}` : t.inStore}
                         </span>
-                      )}
-                    </div>
+                        {mrp > price && (
+                          <span className="text-[9px] text-slate-400 line-through">
+                            ₹${mrp}
+                          </span>
+                        )}
+                      </div>
 
-                    <button
-                      onClick={() => onNavigate?.(`product/${p._id}`)}
-                      className="px-2.5 py-1 rounded-lg bg-[#FF7622] text-white text-[10px] font-black hover:bg-[#e06115] active:scale-95 transition-all shadow-2xs"
-                    >
-                      Details
-                    </button>
+                      <button
+                        onClick={() => onNavigate?.(`product/${p._id}`)}
+                        className="px-2.5 py-1 rounded-lg bg-[#FF7622] text-white text-[10px] font-black hover:bg-[#e06115] active:scale-95 transition-all shadow-2xs"
+                      >
+                        {t.details}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+
+            {/* Show More Button */}
+            {hasMore && (
+              <div className="pt-4 pb-2 flex flex-col items-center justify-center space-y-2">
+                <button
+                  onClick={handleShowMore}
+                  className="w-full py-3 rounded-xl bg-[#FF7622] hover:bg-[#e06115] text-white font-black text-xs shadow-md shadow-orange-500/20 active:scale-95 transition-all flex items-center justify-center space-x-1.5 cursor-pointer"
+                >
+                  <span>{t.showMore}</span>
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </button>
+                <span className="text-[10px] text-slate-400 font-medium">
+                  {t.showing} {displayedProducts.length} {t.of} {filteredProducts.length} {t.items}
+                </span>
+              </div>
+            )}
+
+            {!hasMore && filteredProducts.length > ITEMS_PER_PAGE && (
+              <div className="pt-4 pb-2 text-center">
+                <span className="text-[10px] text-slate-400 font-semibold bg-white px-3 py-1.5 rounded-full border border-slate-200/80 shadow-2xs inline-block">
+                  ✓ {t.allLoaded}
+                </span>
+              </div>
+            )}
+          </>
         )}
       </section>
 

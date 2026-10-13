@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   MapPin, 
   Search, 
@@ -23,11 +23,13 @@ import {
   ShieldCheck,
   Tag,
   Grid,
+  Globe,
   Layers
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Alert, AlertTitle, AlertDescription } from '../ui/alert';
 import ApiClient from '../../api/client';
+import { LANGUAGES, getTranslation, setAppLanguage, getAppLanguage } from '../../locales';
 
 export const UserLayout = ({ currentRoute = 'home', onRouteChange, onRefresh, children }) => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -35,6 +37,42 @@ export const UserLayout = ({ currentRoute = 'home', onRouteChange, onRefresh, ch
   const [showSearchOverlay, setShowSearchOverlay] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [liveCatalog, setLiveCatalog] = useState([]);
+
+  // Language state (English, Arabic, Hindi)
+  const [isLangOpen, setIsLangOpen] = useState(false);
+  const [selectedLang, setSelectedLang] = useState(getAppLanguage);
+  const langDropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleLangSync = (e) => {
+      if (e.detail) setSelectedLang(e.detail);
+    };
+    window.addEventListener('app_language_changed', handleLangSync);
+    return () => window.removeEventListener('app_language_changed', handleLangSync);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (langDropdownRef.current && !langDropdownRef.current.contains(e.target)) {
+        setIsLangOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, []);
+
+  const handleSelectLang = (code) => {
+    setSelectedLang(code);
+    setAppLanguage(code);
+    setIsLangOpen(false);
+  };
+
+  const currentLangObj = LANGUAGES.find((l) => l.code === selectedLang) || LANGUAGES[0];
+  const navT = getTranslation(selectedLang);
 
   // Fetch live products for real-time catalog search
   useEffect(() => {
@@ -75,7 +113,7 @@ export const UserLayout = ({ currentRoute = 'home', onRouteChange, onRefresh, ch
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-1.5 text-slate-600">
               <Sparkles className="w-3.5 h-3.5 text-[#FF7622]" />
-              <span>Digital Catalog: <strong>Al Salhiya Supermarket In-Store Directory & Products</strong></span>
+              <span>{navT.topBanner}</span>
             </div>
           </div>
 
@@ -85,16 +123,49 @@ export const UserLayout = ({ currentRoute = 'home', onRouteChange, onRefresh, ch
               onClick={() => onRouteChange?.(user?.role === 'ADMIN' ? 'admin/dashboard' : 'dashboard')}
               className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-[#18308c]/10 text-[#18308c] hover:bg-[#18308c] hover:text-white transition-all text-[10px] font-black uppercase tracking-wider shadow-2xs"
             >
-              <span>⚡ Return to Admin Console</span>
+              <span>{navT.adminReturn}</span>
             </button>
           )}
 
-          {/* Right: Language */}
-          <div className="flex items-center space-x-6">
-            <div className="flex items-center space-x-1 cursor-pointer hover:text-slate-800">
-              <span>English / العربية</span>
-              <ChevronDown className="w-3 h-3" />
-            </div>
+          {/* Right: Language Switch */}
+          <div className="relative" ref={langDropdownRef}>
+            <button
+              type="button"
+              onClick={() => setIsLangOpen((prev) => !prev)}
+              className="flex items-center space-x-1.5 cursor-pointer hover:text-slate-900 text-slate-600 font-bold text-xs select-none"
+            >
+              <span>{selectedLang === 'ar' ? 'العربية' : selectedLang === 'hi' ? 'हिन्दी' : 'English / العربية'}</span>
+              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isLangOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isLangOpen && (
+              <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 p-1.5 z-50 text-slate-800 animate-in fade-in zoom-in-95 duration-150">
+                <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 mb-1">
+                  {navT.selectLang}
+                </div>
+                {LANGUAGES.map((lang) => {
+                  const isSelected = selectedLang === lang.code;
+                  return (
+                    <button
+                      key={lang.code}
+                      type="button"
+                      onClick={() => handleSelectLang(lang.code)}
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs transition-colors cursor-pointer ${
+                        isSelected
+                          ? 'bg-orange-50 text-[#FF7622] font-black'
+                          : 'text-slate-700 hover:bg-slate-50 font-semibold'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <span>{lang.native}</span>
+                        <span className="text-[10px] text-slate-400 font-normal">({lang.label})</span>
+                      </div>
+                      {isSelected && <Check className="w-3.5 h-3.5 text-[#FF7622]" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -137,7 +208,7 @@ export const UserLayout = ({ currentRoute = 'home', onRouteChange, onRefresh, ch
                   autoFocus
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search products, categories, brands in supermarket..."
+                  placeholder={navT.searchPlaceholder}
                   className="w-full text-xs font-semibold text-[#181C2E] bg-transparent placeholder:text-slate-400 focus:outline-none"
                 />
                 {searchQuery && (
@@ -207,7 +278,7 @@ export const UserLayout = ({ currentRoute = 'home', onRouteChange, onRefresh, ch
                     : 'hover:text-[#FF7622]'
                 }`}
               >
-                <span>Home</span>
+                <span>{navT.home}</span>
               </button>
 
               <button 
@@ -218,7 +289,7 @@ export const UserLayout = ({ currentRoute = 'home', onRouteChange, onRefresh, ch
                     : 'hover:text-[#FF7622]'
                 }`}
               >
-                <span>Product Catalog</span>
+                <span>{navT.productCatalog}</span>
               </button>
 
               <button 
@@ -229,7 +300,7 @@ export const UserLayout = ({ currentRoute = 'home', onRouteChange, onRefresh, ch
                     : 'hover:text-[#FF7622]'
                 }`}
               >
-                <span>About Supermarket</span>
+                <span>{navT.about}</span>
               </button>
 
               <button 
@@ -240,7 +311,7 @@ export const UserLayout = ({ currentRoute = 'home', onRouteChange, onRefresh, ch
                     : 'hover:text-[#FF7622]'
                 }`}
               >
-                <span>Contact & Location</span>
+                <span>{navT.contact}</span>
               </button>
             </nav>
           )}
@@ -258,7 +329,7 @@ export const UserLayout = ({ currentRoute = 'home', onRouteChange, onRefresh, ch
               title="Explore Catalog"
             >
               <Grid className={`w-4 h-4 ${currentRoute === 'shop' ? 'text-white' : 'text-[#FF7622]'}`} />
-              <span className="hidden sm:inline">Browse Catalog</span>
+              <span className="hidden sm:inline">{navT.browseCatalog}</span>
             </button>
 
             {/* Search Icon */}
@@ -303,10 +374,10 @@ export const UserLayout = ({ currentRoute = 'home', onRouteChange, onRefresh, ch
           <div className="md:hidden pt-3 pb-2 border-t border-slate-100 mt-3 animate-in slide-in-from-top-2 duration-150">
             <nav className="flex flex-col space-y-1">
               {[
-                { id: 'home', label: 'Home', icon: Home },
-                { id: 'shop', label: 'Product Catalog', icon: Grid },
-                { id: 'about', label: 'About Supermarket', icon: Info },
-                { id: 'contact', label: 'Contact Us', icon: Phone }
+                { id: 'home', label: navT.home, icon: Home },
+                { id: 'shop', label: navT.productCatalog, icon: Grid },
+                { id: 'about', label: navT.about, icon: Info },
+                { id: 'contact', label: navT.contact, icon: Phone }
               ].map((item) => {
                 const Icon = item.icon;
                 const isActive = currentRoute === item.id;
@@ -338,9 +409,29 @@ export const UserLayout = ({ currentRoute = 'home', onRouteChange, onRefresh, ch
                   className="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-colors bg-[#18308c]/10 text-[#18308c] hover:bg-[#18308c] hover:text-white"
                 >
                   <ShieldCheck className="w-4 h-4" />
-                  <span>Admin Console</span>
+                  <span>{navT.adminReturn}</span>
                 </button>
               )}
+
+              {/* Mobile Menu Language Selector */}
+              <div className="pt-2.5 mt-2 border-t border-slate-100 flex items-center justify-between px-3 py-1">
+                <span className="text-[11px] font-bold text-slate-400">Language</span>
+                <div className="flex items-center space-x-1.5">
+                  {LANGUAGES.map((l) => (
+                    <button
+                      key={l.code}
+                      onClick={() => handleSelectLang(l.code)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors ${
+                        selectedLang === l.code
+                          ? 'bg-[#FF7622] text-white shadow-2xs'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      {l.native}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </nav>
           </div>
         )}
@@ -379,7 +470,7 @@ export const UserLayout = ({ currentRoute = 'home', onRouteChange, onRefresh, ch
             }`}
           >
             <Home className="w-5 h-5 mb-0.5" />
-            <span className="text-[10px] font-bold">Home</span>
+            <span className="text-[10px] font-bold">{navT.home}</span>
           </button>
 
           {/* 2. Shop */}
@@ -392,7 +483,7 @@ export const UserLayout = ({ currentRoute = 'home', onRouteChange, onRefresh, ch
             }`}
           >
             <Store className="w-5 h-5 mb-0.5" />
-            <span className="text-[10px] font-bold">Shop</span>
+            <span className="text-[10px] font-bold">{navT.productCatalog}</span>
           </button>
 
           {/* 3. About */}
@@ -405,7 +496,7 @@ export const UserLayout = ({ currentRoute = 'home', onRouteChange, onRefresh, ch
             }`}
           >
             <Info className="w-5 h-5 mb-0.5" />
-            <span className="text-[10px] font-bold">About</span>
+            <span className="text-[10px] font-bold">{navT.about}</span>
           </button>
 
           {/* 4. Connect */}
@@ -418,7 +509,7 @@ export const UserLayout = ({ currentRoute = 'home', onRouteChange, onRefresh, ch
             }`}
           >
             <Phone className="w-5 h-5 mb-0.5" />
-            <span className="text-[10px] font-bold">Connect</span>
+            <span className="text-[10px] font-bold">{navT.contact}</span>
           </button>
 
         </div>

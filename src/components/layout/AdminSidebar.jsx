@@ -153,18 +153,8 @@ export const AdminSidebar = ({ currentRoute, onRouteChange }) => {
             <span>Appearance</span>
           </button>
 
-          {/* Customer Storefront Link */}
-          <div className="pt-3 pb-1 px-3 text-[10px] font-bold text-white/50 uppercase tracking-wider flex items-center justify-between">
-            <span>Storefront</span>
-          </div>
 
-          <button
-            onClick={() => onRouteChange('home')}
-            className="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl font-medium transition-all text-white/80 hover:text-white hover:bg-white/10"
-          >
-            <Store className="w-4 h-4 shrink-0 text-[#FFA767]" />
-            <span>Storefront View</span>
-          </button>
+       
 
         </nav>
 

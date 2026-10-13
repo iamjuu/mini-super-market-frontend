@@ -1,0 +1,90 @@
+export default {
+  // Navigation & Utility Bar
+  selectLanguage: 'भाषा चुनें',
+  selectLang: 'भाषा चुनें / Select Language',
+  language: 'भाषा',
+  topBanner: 'डिजिटल कैटलॉग: अल सल्हिया सुपरमार्केट स्टोर उत्पाद निर्देशिका',
+  adminReturn: '⚡ एडमिन कंसोल पर वापस जाएं',
+  home: 'होम',
+  productCatalog: 'उत्पाद कैटलॉग',
+  catalog: 'उत्पाद कैटलॉग',
+  about: 'सुपरमार्केट के बारे में',
+  contact: 'संपर्क और स्थान',
+  browseCatalog: 'कैटलॉग देखें',
+  searchPlaceholder: 'सुपरमार्केट में उत्पाद, श्रेणियां, ब्रांड खोजें...',
+  searchPlaceholderMobile: 'किराना, डेयरी, दैनिक डील्स खोजें...',
+  catalogResults: 'कैटलॉग परिणाम',
+  noProductsFoundMatching: 'के लिए कोई उत्पाद नहीं मिला',
+
+  // Hero Section
+  heroTag: 'अल सल्हिया • AL SALHIYA — डिजिटल उत्पाद कैटलॉग',
+  heroTitle1: 'हमारे स्टोर में उपलब्ध',
+  heroTitle2: 'सुपरमार्केट कैटलॉग देखें',
+  heroDesc: 'अल सल्हिया सुपरमार्केट में आपका स्वागत है। ताज़ा उपज, हलाल मीट, समुद्री भोजन, दैनिक किराने का सामान और उच्च गुणवत्ता वाले ब्रांड देखें।',
+  browseCategories: 'श्रेणियां देखें',
+  fullCatalogList: 'पूरी कैटलॉग सूची',
+  physicalStock: 'स्टोर में भौतिक स्टॉक उपलब्ध',
+  verifiedQuality: 'सत्यापित गुणवत्ता वाले उत्पाद',
+
+  // Categories & Step 1
+  step1Tag: 'चरण 1: एक श्रेणी चुनें',
+  categoriesTitle: 'सुपरमार्केट श्रेणियां',
+  categoriesDesc: 'उप-श्रेणियां और उपलब्ध उत्पाद देखने के लिए किसी भी श्रेणी पर क्लिक करें',
+  allItems: 'सभी सामान',
+  entireStore: 'पूरा स्टोर',
+  categories: 'श्रेणियां',
+
+  // Offers & Deals
+  promotionsTag: 'सीमित इन-स्टोर प्रचार',
+  dealsTitle: 'सुपरमार्केट ऑफ़र और डील्स',
+  activeDiscounts: '⚡ सक्रिय इन-स्टोर छूट',
+  specialOffer: '⭐ विशेष ऑफ़र',
+  bestOffers: 'सर्वश्रेष्ठ ऑफ़र और डील्स',
+  bestOffersOnly: '⭐ केवल सर्वोत्तम ऑफ़र',
+  showingDeals: 'डील्स दिखाई जा रही हैं',
+  viewDeal: 'ऑफ़र देखें',
+  deal: 'डील',
+
+  // Filter Pills & Badges
+  subcategoriesLabel: 'उप-श्रेणियां:',
+  brandsLabel: 'ब्रांड्स:',
+  allBrands: 'सभी ब्रांड्स',
+  allSubcat: 'सभी',
+  inStock: 'स्टॉक में उपलब्ध',
+  storeHours: 'दुकान का समय',
+  openHours: 'सुबह 8 बजे - रात 11 बजे खुला',
+  verifiedFresh: 'ताजा और प्रमाणित',
+  freshLabel: '100% ताजा स्टॉक',
+  supermarketProducts: 'सुपरमार्केट उत्पाद',
+  viewAll: 'सभी देखें',
+
+  // Product Display & Price
+  inStorePrice: 'इन-स्टोर मूल्य',
+  inStore: 'स्टोर में उपलब्ध',
+  viewDetails: 'विवरण देखें',
+  details: 'विवरण',
+  showMore: 'और उत्पाद देखें',
+  showMoreShort: 'और देखें',
+  showing: 'दिखा रहे हैं',
+  of: 'में से',
+  products: 'उत्पाद',
+  items: 'सामान',
+  allLoaded: 'सभी उत्पाद लोड हो गए',
+  noProductsFound: 'कोई उत्पाद नहीं मिला',
+  noProductsDesc: 'वर्तमान में इस चयन में कोई उत्पाद नहीं है। कृपया कोई अन्य श्रेणी चुनें या खोज रीसेट करें।',
+  resetFilters: 'सभी फ़िल्टर रीसेट करें',
+  reset: 'रीसेट',
+  showAllProducts: 'सभी उत्पाद देखें',
+
+  // Quick View Modal
+  quickViewTitle: 'उत्पाद विवरण',
+  close: 'बंद करें',
+  viewProductPage: 'पूरा उत्पाद पृष्ठ देखें',
+
+  // Supermarket Footer
+  quickLinks: 'त्वरित लिंक',
+  ourStory: 'हमारी कहानी',
+  media: 'मीडिया',
+  getInTouch: 'संपर्क करें',
+  copyright: '© 2026 अल सल्हिया सुपरमार्केट • सर्वाधिकार सुरक्षित।',
+};

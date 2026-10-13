@@ -60,6 +60,8 @@ const getProductFallbackImage = (name = '') => {
   return 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&auto=format&fit=crop&q=80';
 };
 
+import { getTranslation, getAppLanguage } from '../../../../locales';
+
 export const DesktopStorefront = ({ onNavigate }) => {
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
@@ -67,6 +69,19 @@ export const DesktopStorefront = ({ onNavigate }) => {
   const [products, setProducts] = useState([]);
   const [offers, setOffers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Language state (synced with app_language)
+  const [selectedLang, setSelectedLang] = useState(getAppLanguage);
+
+  useEffect(() => {
+    const handleLangSync = (e) => {
+      if (e.detail) setSelectedLang(e.detail);
+    };
+    window.addEventListener('app_language_changed', handleLangSync);
+    return () => window.removeEventListener('app_language_changed', handleLangSync);
+  }, []);
+
+  const t = getTranslation(selectedLang);
 
   // Active selections
   const [selectedCategory, setSelectedCategory] = useState(null); // category object or null for all
@@ -185,6 +200,25 @@ export const DesktopStorefront = ({ onNavigate }) => {
     });
   }, [products, selectedCategory, selectedSubcategory, selectedBrand, searchQuery]);
 
+  // Show 8 items initially and load 8 more on "Show More"
+  const ITEMS_PER_PAGE = 8;
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+
+  // Reset to 8 when filters change
+  useEffect(() => {
+    setVisibleCount(ITEMS_PER_PAGE);
+  }, [selectedCategory, selectedSubcategory, selectedBrand, searchQuery]);
+
+  const displayedProducts = useMemo(() => {
+    return filteredProducts.slice(0, visibleCount);
+  }, [filteredProducts, visibleCount]);
+
+  const hasMore = visibleCount < filteredProducts.length;
+
+  const handleShowMore = () => {
+    setVisibleCount((prev) => prev + ITEMS_PER_PAGE);
+  };
+
   // Handle Category Click
   const handleSelectCategory = (cat) => {
     if (selectedCategory?._id === cat?._id) {
@@ -221,16 +255,16 @@ export const DesktopStorefront = ({ onNavigate }) => {
           <div className="lg:w-1/2 space-y-5 text-left">
             <div className="inline-flex items-center space-x-2 text-[11px] font-black uppercase tracking-wider text-[#FF7824] bg-orange-100/70 px-3.5 py-1.5 rounded-full border border-orange-200/60 shadow-2xs">
               <span className="w-2 h-2 rounded-full bg-[#FF7824] animate-pulse"></span>
-              <span>AL SALHIYA • الصالحية — DIGITAL PRODUCT CATALOG</span>
+              <span>{t.heroTag}</span>
             </div>
 
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#0E1D4A] leading-[1.15] tracking-tight">
-              Explore Our In-Store <br />
-              <span className="text-[#18308C]">Supermarket Catalog</span>
+              {t.heroTitle1} <br />
+              <span className="text-[#18308C]">{t.heroTitle2}</span>
             </h1>
 
             <p className="text-xs sm:text-sm text-slate-600 max-w-lg leading-relaxed font-normal">
-              Welcome to Al Salhiya Supermarket. Browse our complete inventory of fresh produce, halal meats, wild catch seafood, daily groceries, and verified quality brands.
+              {t.heroDesc}
             </p>
 
             {/* Quick Action Badges */}
@@ -242,7 +276,7 @@ export const DesktopStorefront = ({ onNavigate }) => {
                 }}
                 className="px-6 py-3 rounded-2xl bg-[#FF7622] hover:bg-[#E56314] text-white font-black text-xs shadow-md shadow-orange-500/20 active:scale-95 transition-all flex items-center space-x-2"
               >
-                <span>Browse Categories</span>
+                <span>{t.browseCategories}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
@@ -250,7 +284,7 @@ export const DesktopStorefront = ({ onNavigate }) => {
                 onClick={() => onNavigate?.('shop')}
                 className="px-6 py-3 rounded-2xl bg-white border border-slate-200 text-slate-800 font-black text-xs hover:border-[#FF7622] hover:text-[#FF7622] shadow-2xs active:scale-95 transition-all flex items-center space-x-2"
               >
-                <span>Full Catalog List</span>
+                <span>{t.fullCatalogList}</span>
                 <Grid className="w-4 h-4" />
               </button>
             </div>
@@ -259,11 +293,11 @@ export const DesktopStorefront = ({ onNavigate }) => {
             <div className="pt-2 flex items-center space-x-6 text-[11px] text-slate-500 font-semibold">
               <div className="flex items-center space-x-1.5">
                 <Store className="w-4 h-4 text-emerald-600" />
-                <span>Physical In-Store Stock</span>
+                <span>{t.physicalStock}</span>
               </div>
               <div className="flex items-center space-x-1.5">
                 <ShieldCheck className="w-4 h-4 text-[#18308C]" />
-                <span>Verified Quality Products</span>
+                <span>{t.verifiedQuality}</span>
               </div>
             </div>
           </div>
@@ -305,13 +339,13 @@ export const DesktopStorefront = ({ onNavigate }) => {
             <div>
               <div className="inline-flex items-center space-x-1.5 text-[11px] font-black uppercase tracking-wider text-[#FF7622] mb-1">
                 <Layers className="w-3.5 h-3.5" />
-                <span>Step 1: Choose a Category</span>
+                <span>{t.step1Tag}</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-[#1F2229] tracking-tight">
-                Supermarket Categories
+                {t.categoriesTitle}
               </h2>
               <p className="text-xs text-slate-500 font-medium mt-1">
-                Click on any category to view its subcategories and available products
+                {t.categoriesDesc}
               </p>
             </div>
           </div>
@@ -368,10 +402,10 @@ export const DesktopStorefront = ({ onNavigate }) => {
                       "text-xs sm:text-sm font-bold text-center leading-snug transition-colors line-clamp-1",
                       !selectedCategory ? "text-[#181C2E] font-black" : "text-slate-800 group-hover/item:text-[#FF7622]"
                     )}>
-                      All Items
+                      {t.allItems}
                     </h3>
                     <span className="text-[11px] font-semibold text-slate-400">
-                      Entire Store
+                      {t.entireStore}
                     </span>
                     {!selectedCategory && (
                       <span className="w-1.5 h-1.5 rounded-full bg-[#181C2E] animate-pulse mt-1" />
@@ -453,14 +487,14 @@ export const DesktopStorefront = ({ onNavigate }) => {
               <div>
                 <div className="inline-flex items-center space-x-1.5 text-[11px] font-black uppercase tracking-wider text-[#FF7622] mb-1">
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>Limited In-Store Promotions</span>
+                  <span>{t.promotionsTag}</span>
                 </div>
                 <h2 className="text-2xl font-black text-[#1F2229] tracking-tight">
-                  Supermarket Offer Banners &amp; Deals
+                  {t.dealsTitle}
                 </h2>
               </div>
               <span className="text-xs font-bold text-slate-400 bg-white px-3 py-1.5 rounded-full border border-slate-200/80 shadow-2xs self-start sm:self-auto">
-                ⚡ Active In-Store Discounts
+                {t.activeDiscounts}
               </span>
             </div>
 
@@ -477,12 +511,12 @@ export const DesktopStorefront = ({ onNavigate }) => {
                 return (
                   <div
                     key={offer._id || idx}
-                    className="relative rounded-2xl overflow-hidden p-5 bg-white border-2 border-[#18308C] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group"
+                    className="relative rounded-2xl overflow-hidden p-5 bg-white  border-[#FF7622] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 pr-1">
                         <span className="inline-block px-2.5 py-0.5 rounded-full bg-[#18308C]/10 text-[#18308C] text-[10px] font-black uppercase mb-2 border border-[#18308C]/15">
-                          {offer.tagBadge || '⭐ Special Offer'}
+                          {offer.tagBadge || t.specialOffer}
                         </span>
                         <h3 className="text-sm font-black text-[#0E1D4A] line-clamp-2 leading-tight group-hover:text-[#FF7824] transition-colors">
                           {offer.title}
@@ -529,7 +563,7 @@ export const DesktopStorefront = ({ onNavigate }) => {
                         }}
                         className="px-3.5 py-1.5 rounded-full bg-[#18308C] text-white text-[10px] font-black hover:bg-[#FF7824] active:scale-95 transition-all shadow-xs"
                       >
-                        View Deal
+                        {t.viewDeal}
                       </button>
                     </div>
 
@@ -553,7 +587,7 @@ export const DesktopStorefront = ({ onNavigate }) => {
           {/* Subcategories Filter Pill Bar (shown when category is selected) */}
           {selectedCategory && activeSubcategories.length > 0 && (
             <div className="flex items-center space-x-2 overflow-x-auto pb-1 text-xs">
-              <span className="font-bold text-slate-400 shrink-0 text-[11px] uppercase tracking-wider">Subcategories:</span>
+              <span className="font-bold text-slate-400 shrink-0 text-[11px] uppercase tracking-wider">{t.subcategoriesLabel}</span>
               <button
                 onClick={() => setSelectedSubcategory(null)}
                 className={cn(
@@ -563,7 +597,7 @@ export const DesktopStorefront = ({ onNavigate }) => {
                     : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
                 )}
               >
-                All {selectedCategory.name}
+                {t.allSubcat} {selectedCategory.name}
               </button>
               {activeSubcategories.map((sub) => (
                 <button
@@ -585,7 +619,7 @@ export const DesktopStorefront = ({ onNavigate }) => {
           {/* Brands Filter Pill Bar (if brands exist) */}
           {brands.length > 0 && (
             <div className="flex items-center space-x-2 overflow-x-auto pb-1 text-xs">
-              <span className="font-bold text-slate-400 shrink-0 text-[11px] uppercase tracking-wider">Brands:</span>
+              <span className="font-bold text-slate-400 shrink-0 text-[11px] uppercase tracking-wider">{t.brandsLabel}</span>
               <button
                 onClick={() => setSelectedBrand('ALL')}
                 className={cn(
@@ -595,7 +629,7 @@ export const DesktopStorefront = ({ onNavigate }) => {
                     : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
                 )}
               >
-                All Brands
+                {t.allBrands}
               </button>
               {brands.map((b) => (
                 <button
@@ -633,9 +667,9 @@ export const DesktopStorefront = ({ onNavigate }) => {
               <div className="w-12 h-12 rounded-2xl bg-orange-50 text-[#FF7622] flex items-center justify-center mx-auto">
                 <Grid className="w-6 h-6" />
               </div>
-              <h3 className="text-base font-black text-slate-800">No Products Found</h3>
+              <h3 className="text-base font-black text-slate-800">{t.noProductsFound}</h3>
               <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                No products are currently cataloged in this selection. Try selecting another category or clear the search.
+                {t.noProductsDesc}
               </p>
               <button
                 onClick={() => {
@@ -646,99 +680,125 @@ export const DesktopStorefront = ({ onNavigate }) => {
                 }}
                 className="px-4 py-2 rounded-xl bg-[#FF7622] text-white font-bold text-xs shadow-xs"
               >
-                Reset All Filters
+                {t.resetFilters}
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
-              {filteredProducts.map((p) => {
-                const prodImg = p.image || getProductFallbackImage(p.name);
-                const catName = p.categoryName || (typeof p.categoryId === 'object' ? p.categoryId?.name : '') || 'General';
-                const subName = p.subcategoryName || (typeof p.subcategoryId === 'object' ? p.subcategoryId?.name : '') || '';
-                const brandName = p.brandName || (typeof p.brandId === 'object' ? p.brandId?.name : '') || '';
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
+                {displayedProducts.map((p) => {
+                  const prodImg = p.image || getProductFallbackImage(p.name);
+                  const catName = p.categoryName || (typeof p.categoryId === 'object' ? p.categoryId?.name : '') || 'General';
+                  const subName = p.subcategoryName || (typeof p.subcategoryId === 'object' ? p.subcategoryId?.name : '') || '';
+                  const brandName = p.brandName || (typeof p.brandId === 'object' ? p.brandId?.name : '') || '';
 
-                return (
-                  <div
-                    key={p._id}
-                    className="bg-white rounded-2xl p-3 sm:p-4 border border-slate-200/90 shadow-2xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between h-full group"
-                  >
-                    <div className="flex-1 flex flex-col">
-                      {/* Product Image Frame (Consistent Fixed Height for all images) */}
-                      <div 
-                        onClick={() => onNavigate?.(`product/${p._id}`)}
-                        className="relative rounded-xl overflow-hidden bg-slate-100 h-40 sm:h-48 md:h-52 w-full flex items-center justify-center cursor-pointer mb-2.5 sm:mb-3 shrink-0 group-hover:scale-[1.01] transition-transform"
-                      >
-                        <img
-                          src={prodImg}
-                          alt={p.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          loading="lazy"
-                        />
+                  return (
+                    <div
+                      key={p._id}
+                      className="bg-white rounded-2xl p-3 sm:p-4 border border-slate-200/90 shadow-2xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between h-full group"
+                    >
+                      <div className="flex-1 flex flex-col">
+                        {/* Product Image Frame (Consistent Fixed Height for all images) */}
+                        <div 
+                          onClick={() => onNavigate?.(`product/${p._id}`)}
+                          className="relative rounded-xl overflow-hidden bg-slate-100 h-40 sm:h-48 md:h-52 w-full flex items-center justify-center cursor-pointer mb-2.5 sm:mb-3 shrink-0 group-hover:scale-[1.01] transition-transform"
+                        >
+                          <img
+                            src={prodImg}
+                            alt={p.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            loading="lazy"
+                          />
 
-                        {/* In-Stock Badge */}
-                        <div className="absolute top-2 left-2 bg-white/95 backdrop-blur-xs px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md sm:rounded-lg text-[9px] sm:text-[10px] font-black text-emerald-700 shadow-2xs border border-emerald-100 flex items-center space-x-1">
-                          <CheckCircle2 className="w-2.5 sm:w-3 h-2.5 sm:h-3 text-emerald-600" />
-                          <span>In Stock</span>
+                          {/* In-Stock Badge */}
+                          <div className="absolute top-2 left-2 bg-white/95 backdrop-blur-xs px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md sm:rounded-lg text-[9px] sm:text-[10px] font-black text-emerald-700 shadow-2xs border border-emerald-100 flex items-center space-x-1">
+                            <CheckCircle2 className="w-2.5 sm:w-3 h-2.5 sm:h-3 text-emerald-600" />
+                            <span>{t.inStock}</span>
+                          </div>
+
+                          {/* Brand badge if present */}
+                          {brandName && (
+                            <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-xs px-2 py-0.5 rounded-md sm:rounded-lg text-[9px] sm:text-[10px] font-bold text-white max-w-[45%] truncate">
+                              {brandName}
+                            </div>
+                          )}
                         </div>
 
-                        {/* Brand badge if present */}
-                        {brandName && (
-                          <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-xs px-2 py-0.5 rounded-md sm:rounded-lg text-[9px] sm:text-[10px] font-bold text-white max-w-[45%] truncate">
-                            {brandName}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Category & Subcategory Tags */}
-                      <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 mb-1.5 sm:mb-2">
-                        <span className="px-1.5 sm:px-2 py-0.5 rounded-md bg-orange-100 text-[#FF7622] text-[9px] sm:text-[10px] font-black uppercase">
-                          {catName}
-                        </span>
-                        {subName && (
-                          <span className="px-1.5 sm:px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[9px] sm:text-[10px] font-bold">
-                            {subName}
+                        {/* Category & Subcategory Tags */}
+                        <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 mb-1.5 sm:mb-2">
+                          <span className="px-1.5 sm:px-2 py-0.5 rounded-md bg-orange-100 text-[#FF7622] text-[9px] sm:text-[10px] font-black uppercase">
+                            {catName}
                           </span>
-                        )}
+                          {subName && (
+                            <span className="px-1.5 sm:px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[9px] sm:text-[10px] font-bold">
+                              {subName}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Product Name */}
+                        <h3 
+                          onClick={() => onNavigate?.(`product/${p._id}`)}
+                          className="font-black text-xs sm:text-sm md:text-base text-[#181C2E] hover:text-[#FF7622] transition-colors cursor-pointer line-clamp-1 sm:line-clamp-2 leading-snug"
+                          title={p.name}
+                        >
+                          {p.name}
+                        </h3>
+
+                        {/* Description (visible on tablet/desktop, compact) */}
+                        <p className="text-[11px] sm:text-xs text-slate-500 line-clamp-2 leading-relaxed mt-1 font-normal hidden sm:block">
+                          {p.description || 'Verified supermarket product available in-store.'}
+                        </p>
                       </div>
 
-                      {/* Product Name */}
-                      <h3 
-                        onClick={() => onNavigate?.(`product/${p._id}`)}
-                        className="font-black text-xs sm:text-sm md:text-base text-[#181C2E] hover:text-[#FF7622] transition-colors cursor-pointer line-clamp-1 sm:line-clamp-2 leading-snug"
-                        title={p.name}
-                      >
-                        {p.name}
-                      </h3>
+                      {/* Bottom Row: Price & View Details Action */}
+                      <div className="pt-2.5 sm:pt-4 border-t border-slate-100 mt-2.5 sm:mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                          <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 block uppercase">{t.inStorePrice}</span>
+                          <span className="text-xs sm:text-base font-black text-[#FF7622]">
+                            {p.price ? `₹${Number(p.price).toFixed(2)}` : t.inStore}
+                          </span>
+                        </div>
 
-                      {/* Description (visible on tablet/desktop, compact) */}
-                      <p className="text-[11px] sm:text-xs text-slate-500 line-clamp-2 leading-relaxed mt-1 font-normal hidden sm:block">
-                        {p.description || 'Verified supermarket product available in-store.'}
-                      </p>
-                    </div>
-
-                    {/* Bottom Row: Price & View Details Action */}
-                    <div className="pt-2.5 sm:pt-4 border-t border-slate-100 mt-2.5 sm:mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <div>
-                        <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 block uppercase">In-Store Price</span>
-                        <span className="text-xs sm:text-base font-black text-[#FF7622]">
-                          {p.price ? `₹${Number(p.price).toFixed(2)}` : 'In Store'}
-                        </span>
+                        <button
+                          onClick={() => setQuickViewProduct({ ...p, image: prodImg, catName, subName, brandName })}
+                          className="w-full sm:w-auto px-2 sm:px-3.5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl bg-orange-50 hover:bg-[#FF7622] text-[#FF7622] hover:text-white font-black text-[11px] sm:text-xs transition-all flex items-center justify-center space-x-1 shadow-2xs"
+                        >
+                          <Eye className="w-3 sm:w-3.5 h-3 sm:h-3.5 shrink-0" />
+                          <span className="hidden sm:inline">{t.viewDetails}</span>
+                          <span className="sm:hidden">{t.details}</span>
+                        </button>
                       </div>
 
-                      <button
-                        onClick={() => setQuickViewProduct({ ...p, image: prodImg, catName, subName, brandName })}
-                        className="w-full sm:w-auto px-2 sm:px-3.5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl bg-orange-50 hover:bg-[#FF7622] text-[#FF7622] hover:text-white font-black text-[11px] sm:text-xs transition-all flex items-center justify-center space-x-1 shadow-2xs"
-                      >
-                        <Eye className="w-3 sm:w-3.5 h-3 sm:h-3.5 shrink-0" />
-                        <span className="hidden sm:inline">View Details</span>
-                        <span className="sm:hidden">Details</span>
-                      </button>
                     </div>
+                  );
+                })}
+              </div>
 
-                  </div>
-                );
-              })}
-            </div>
+              {/* Show More Products Button */}
+              {hasMore && (
+                <div className="pt-8 flex flex-col items-center justify-center space-y-2.5">
+                  <button
+                    onClick={handleShowMore}
+                    className="px-8 py-3.5 rounded-2xl bg-[#FF7622] hover:bg-[#E56314] text-white font-black text-xs sm:text-sm shadow-md shadow-orange-500/20 hover:shadow-lg hover:shadow-orange-500/30 active:scale-95 transition-all duration-200 flex items-center space-x-2 cursor-pointer"
+                  >
+                    <span>{t.showMore}</span>
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
+                  <p className="text-[11px] sm:text-xs text-slate-400 font-semibold">
+                    {t.showing} {displayedProducts.length} {t.of} {filteredProducts.length} {t.products}
+                  </p>
+                </div>
+              )}
+
+              {!hasMore && filteredProducts.length > ITEMS_PER_PAGE && (
+                <div className="pt-8 text-center">
+                  <span className="text-[11px] sm:text-xs text-slate-400 font-semibold bg-white px-4 py-2 rounded-full border border-slate-200/80 shadow-2xs inline-block">
+                    ✓ {t.allLoaded} ({filteredProducts.length})
+                  </span>
+                </div>
+              )}
+            </>
           )}
 
         </div>
@@ -769,31 +829,31 @@ export const DesktopStorefront = ({ onNavigate }) => {
 
             {/* 2. Quick Links */}
             <div className="space-y-3">
-              <h4 className="text-sm font-bold text-white tracking-tight">Quick links</h4>
+              <h4 className="text-sm font-bold text-white tracking-tight">{t.quickLinks}</h4>
               <ul className="space-y-2 text-xs text-stone-400">
                 <li>
                   <button onClick={() => { onNavigate?.('home'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-[#FF7622] transition-colors cursor-pointer text-left">
-                    Home
+                    {t.home}
                   </button>
                 </li>
                 <li>
                   <button onClick={() => { onNavigate?.('shop'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-[#FF7622] transition-colors cursor-pointer text-left">
-                    Product Catalog
+                    {t.catalog}
                   </button>
                 </li>
                 <li>
                   <button onClick={() => { onNavigate?.('about'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-[#FF7622] transition-colors cursor-pointer text-left">
-                    Our Story
+                    {t.ourStory}
                   </button>
                 </li>
                 <li>
                   <button onClick={() => { onNavigate?.('news'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-[#FF7622] transition-colors cursor-pointer text-left">
-                    Media
+                    {t.media}
                   </button>
                 </li>
                 <li>
                   <button onClick={() => { onNavigate?.('contact'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-[#FF7622] transition-colors cursor-pointer text-left">
-                    Contact
+                    {t.contact}
                   </button>
                 </li>
               </ul>
@@ -801,7 +861,7 @@ export const DesktopStorefront = ({ onNavigate }) => {
 
             {/* 3. Categories */}
             <div className="space-y-3">
-              <h4 className="text-sm font-bold text-white tracking-tight">Categories</h4>
+              <h4 className="text-sm font-bold text-white tracking-tight">{t.categories}</h4>
               <ul className="space-y-2 text-xs text-stone-400">
                 {['Croissant', 'Fatayer', 'Pizza', 'Cupcakes', 'Tasbeera', 'Rusk & Toast'].map((cat) => (
                   <li key={cat}>
@@ -818,7 +878,7 @@ export const DesktopStorefront = ({ onNavigate }) => {
 
             {/* 4. Get in touch */}
             <div className="space-y-3">
-              <h4 className="text-sm font-bold text-white tracking-tight">Get in touch</h4>
+              <h4 className="text-sm font-bold text-white tracking-tight">{t.getInTouch}</h4>
               <div className="space-y-2 text-xs text-stone-400">
                 <p>
                   <a href="tel:+96524739900" className="hover:text-[#FF7622] transition-colors">
@@ -846,7 +906,7 @@ export const DesktopStorefront = ({ onNavigate }) => {
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-stone-500 gap-4">
-            <p>© 2026 Al Salhiya Supermarket • All rights reserved. Physical Store Catalog System.</p>
+            <p>{t.copyright}</p>
             <button
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
               className="w-9 h-9 rounded-full bg-[#272052] hover:bg-[#352c70] text-white flex items-center justify-center transition-all shadow-md active:scale-95 cursor-pointer"
@@ -909,9 +969,9 @@ export const DesktopStorefront = ({ onNavigate }) => {
                 </p>
 
                 <div className="pt-2 flex items-baseline space-x-2">
-                  <span className="text-xs font-bold text-slate-400">In-Store Price:</span>
+                  <span className="text-xs font-bold text-slate-400">{t.inStorePrice}:</span>
                   <span className="text-lg font-black text-[#FF7622]">
-                    {quickViewProduct.price ? `₹${Number(quickViewProduct.price).toFixed(2)}` : 'In Store'}
+                    {quickViewProduct.price ? `₹${Number(quickViewProduct.price).toFixed(2)}` : t.inStore}
                   </span>
                 </div>
               </div>
@@ -926,7 +986,7 @@ export const DesktopStorefront = ({ onNavigate }) => {
                 }}
                 className="w-full py-3 rounded-2xl bg-[#FF7622] hover:bg-[#E56314] text-white font-black text-xs shadow-md transition-all flex items-center justify-center space-x-2"
               >
-                <span>View Full Product Page</span>
+                <span>{t.viewProductPage}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
@@ -934,7 +994,7 @@ export const DesktopStorefront = ({ onNavigate }) => {
                 onClick={() => setQuickViewProduct(null)}
                 className="w-full sm:w-auto px-5 py-3 rounded-2xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition-colors"
               >
-                Close
+                {t.close}
               </button>
             </div>
           </div>

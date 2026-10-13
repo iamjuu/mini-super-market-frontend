@@ -1,0 +1,90 @@
+export default {
+  // Navigation & Utility Bar
+  selectLanguage: 'Select Language',
+  selectLang: 'Language / اللغة / भाषा',
+  language: 'Language',
+  topBanner: 'Digital Catalog: Al Salhiya Supermarket In-Store Directory & Products',
+  adminReturn: '⚡ Return to Admin Console',
+  home: 'Home',
+  productCatalog: 'Product Catalog',
+  catalog: 'Product Catalog',
+  about: 'About Supermarket',
+  contact: 'Contact & Location',
+  browseCatalog: 'Browse Catalog',
+  searchPlaceholder: 'Search products, categories, brands in supermarket...',
+  searchPlaceholderMobile: 'Search groceries, dairy, daily deals...',
+  catalogResults: 'Catalog Results',
+  noProductsFoundMatching: 'No products found matching',
+
+  // Hero Section
+  heroTag: 'AL SALHIYA • الصالحية — DIGITAL PRODUCT CATALOG',
+  heroTitle1: 'Explore Our In-Store',
+  heroTitle2: 'Supermarket Catalog',
+  heroDesc: 'Welcome to Al Salhiya Supermarket. Browse our complete inventory of fresh produce, halal meats, wild catch seafood, daily groceries, and verified quality brands.',
+  browseCategories: 'Browse Categories',
+  fullCatalogList: 'Full Catalog List',
+  physicalStock: 'Physical In-Store Stock',
+  verifiedQuality: 'Verified Quality Products',
+
+  // Categories & Step 1
+  step1Tag: 'Step 1: Choose a Category',
+  categoriesTitle: 'Supermarket Categories',
+  categoriesDesc: 'Click on any category to view its subcategories and available products',
+  allItems: 'All Items',
+  entireStore: 'Entire Store',
+  categories: 'Categories',
+
+  // Offers & Deals
+  promotionsTag: 'Limited In-Store Promotions',
+  dealsTitle: 'Supermarket Offer Banners & Deals',
+  activeDiscounts: '⚡ Active In-Store Discounts',
+  specialOffer: '⭐ Special Offer',
+  bestOffers: 'Best Offers & Deals',
+  bestOffersOnly: '⭐ Best Offers Only',
+  showingDeals: 'Showing Deals',
+  viewDeal: 'View Deal',
+  deal: 'Deal',
+
+  // Filter Pills & Badges
+  subcategoriesLabel: 'Subcategories:',
+  brandsLabel: 'Brands:',
+  allBrands: 'All Brands',
+  allSubcat: 'All',
+  inStock: 'In Stock',
+  storeHours: 'Store Hours',
+  openHours: 'Open 8 AM - 11 PM',
+  verifiedFresh: 'Verified Fresh',
+  freshLabel: '100% In-Store Fresh',
+  supermarketProducts: 'Supermarket Products',
+  viewAll: 'View All',
+
+  // Product Display & Price
+  inStorePrice: 'In-Store Price',
+  inStore: 'In Store',
+  viewDetails: 'View Details',
+  details: 'Details',
+  showMore: 'Show More Products',
+  showMoreShort: 'Show More',
+  showing: 'Showing',
+  of: 'of',
+  products: 'products',
+  items: 'items',
+  allLoaded: 'All products loaded',
+  noProductsFound: 'No Products Found',
+  noProductsDesc: 'No products are currently cataloged in this selection. Try selecting another category or clear the search.',
+  resetFilters: 'Reset All Filters',
+  reset: 'Reset',
+  showAllProducts: 'Show All Products',
+
+  // Quick View Modal
+  quickViewTitle: 'Product Details',
+  close: 'Close',
+  viewProductPage: 'View Full Product Page',
+
+  // Supermarket Footer
+  quickLinks: 'Quick links',
+  ourStory: 'Our Story',
+  media: 'Media',
+  getInTouch: 'Get in touch',
+  copyright: '© 2026 Al Salhiya Supermarket • All rights reserved. Physical Store Catalog System.',
+};

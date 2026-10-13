@@ -1,0 +1,90 @@
+export default {
+  // Navigation & Utility Bar
+  selectLanguage: 'اختر اللغة',
+  selectLang: 'اختر اللغة / Select Language',
+  language: 'اللغة',
+  topBanner: 'الدليل الرقمي: سوبرماركت الصالحية - دليل المنتجات في المتجر',
+  adminReturn: '⚡ العودة إلى لوحة التحكم',
+  home: 'الرئيسية',
+  productCatalog: 'دليل المنتجات',
+  catalog: 'دليل المنتجات',
+  about: 'عن السوبرماركت',
+  contact: 'التواصل والموقع',
+  browseCatalog: 'تصفح الدليل',
+  searchPlaceholder: 'ابحث في المنتجات والأقسام والعلامات التجارية...',
+  searchPlaceholderMobile: 'ابحث في المواد الغذائية، الألبان، العروض...',
+  catalogResults: 'نتائج الدليل',
+  noProductsFoundMatching: 'لم يتم العثور على منتجات مطابقة لـ',
+
+  // Hero Section
+  heroTag: 'الصالحية • AL SALHIYA — الدليل الرقمي للمنتجات',
+  heroTitle1: 'استكشف دليل',
+  heroTitle2: 'سوبرماركت الصالحية في المتجر',
+  heroDesc: 'مرحباً بكم في سوبرماركت الصالحية. تصفحوا مجموعتنا الكاملة من المنتجات الطازجة، اللحوم الحلال، المأكولات البحرية، والمؤن اليومية.',
+  browseCategories: 'تصفح الأقسام',
+  fullCatalogList: 'دليل المنتجات الكامل',
+  physicalStock: 'متوفر فعلياً في المتجر',
+  verifiedQuality: 'منتجات عالية الجودة معتمدة',
+
+  // Categories & Step 1
+  step1Tag: 'الخطوة 1: اختر القسم',
+  categoriesTitle: 'أقسام السوبرماركت',
+  categoriesDesc: 'انقر فوق أي قسم لعرض أقسامه الفرعية والمنتجات المتاحة',
+  allItems: 'كل المنتجات',
+  entireStore: 'كامل المتجر',
+  categories: 'الأقسام',
+
+  // Offers & Deals
+  promotionsTag: 'عروض حصرية في المتجر',
+  dealsTitle: 'عروض وتخفيضات السوبرماركت',
+  activeDiscounts: '⚡ خصومات فعالة في المتجر',
+  specialOffer: '⭐ عرض خاص',
+  bestOffers: 'أفضل العروض والصفقات',
+  bestOffersOnly: '⭐ أفضل العروض فقط',
+  showingDeals: 'عرض الصفقات',
+  viewDeal: 'عرض الصفقة',
+  deal: 'صفقة',
+
+  // Filter Pills & Badges
+  subcategoriesLabel: 'الأقسام الفرعية:',
+  brandsLabel: 'العلامات التجارية:',
+  allBrands: 'كل العلامات التجارية',
+  allSubcat: 'الكل',
+  inStock: 'متوفر',
+  storeHours: 'ساعات العمل',
+  openHours: 'مفتوح 8 ص - 11 م',
+  verifiedFresh: 'طازج ومضمون',
+  freshLabel: '100% طازج في المتجر',
+  supermarketProducts: 'منتجات السوبرماركت',
+  viewAll: 'عرض الكل',
+
+  // Product Display & Price
+  inStorePrice: 'السعر في المتجر',
+  inStore: 'في المتجر',
+  viewDetails: 'عرض التفاصيل',
+  details: 'التفاصيل',
+  showMore: 'عرض المزيد من المنتجات',
+  showMoreShort: 'عرض المزيد',
+  showing: 'عرض',
+  of: 'من',
+  products: 'منتج',
+  items: 'عنصر',
+  allLoaded: 'تم تحميل جميع المنتجات',
+  noProductsFound: 'لم يتم العثور على منتجات',
+  noProductsDesc: 'لا توجد منتجات مسجلة في هذا القسم حالياً. جرب اختيار قسم آخر أو إلغاء البحث.',
+  resetFilters: 'إعادة ضبط التصفية',
+  reset: 'إعادة ضبط',
+  showAllProducts: 'عرض جميع المنتجات',
+
+  // Quick View Modal
+  quickViewTitle: 'تفاصيل المنتج',
+  close: 'إغلاق',
+  viewProductPage: 'عرض صفحة المنتج الكاملة',
+
+  // Supermarket Footer
+  quickLinks: 'روابط سريعة',
+  ourStory: 'قصتنا',
+  media: 'الإعلام',
+  getInTouch: 'تواصل معنا',
+  copyright: '© 2026 سوبرماركت الصالحية • جميع الحقوق محفوظة. نظام دليل المتجر.',
+};
