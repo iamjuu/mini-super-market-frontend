@@ -167,7 +167,7 @@ export const NotFoundPage = ({ onNavigate, attemptedPath = '' }) => {
           {isAdminPath ? (
             <button
               id="btn-404-admin-login"
-              onClick={() => (onNavigate ? onNavigate('admin/dashboard') : (window.location.href = '/admin/login'))}
+              onClick={() => (onNavigate ? onNavigate('admin/dashboard/login-admin') : (window.location.href = '/admin/dashboard/login-admin'))}
               className="inline-flex items-center space-x-2 px-5 py-3 rounded-2xl bg-[#18308c] text-white font-bold text-sm shadow-md hover:bg-[#122470] hover:-translate-y-0.5 transition-all"
             >
               <ShieldAlert className="w-4 h-4 text-amber-300" />
