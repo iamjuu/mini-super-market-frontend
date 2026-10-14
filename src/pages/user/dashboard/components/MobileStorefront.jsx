@@ -31,9 +31,12 @@ import {
   Cookie,
   Beef,
   Fish,
-  Salad
+  Salad,
+  Award,
+  Truck
 } from 'lucide-react';
 import { useAuth } from '../../../../context/AuthContext';
+import { usePlatform } from '../../../../context/PlatformContext';
 import ApiClient from '../../../../api/client';
 import { cn } from '../../../../lib/utils';
 
@@ -142,12 +145,16 @@ import { LANGUAGES, getTranslation, setAppLanguage, getAppLanguage } from '../..
 
 export const MobileStorefront = ({ onNavigate }) => {
   const { user, isAuthenticated } = useAuth();
+  const { appearance } = usePlatform();
 
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const heroImage = appearance?.heroImageUrl || '';
+  const brandName = appearance?.platformName || 'Alfaysal Bakery';
+  const brandLogo = appearance?.logoUrl || '/al-salhiya-logo.jpg';
 
   // Language switcher state (English, Arabic, Hindi)
   const [isLangOpen, setIsLangOpen] = useState(false);
@@ -556,126 +563,206 @@ export const MobileStorefront = ({ onNavigate }) => {
     <div className="w-full bg-[#F8F9FA] text-[#181C2E] min-h-screen pb-28">
 
       {/* =============================================================
-          1. TOP MOBILE HEADER (Coral Gradient + Auth Switch + Capsule Search)
+          1. HERO — Compact mobile brand hero (admin image)
          ============================================================= */}
-      <section className="bg-gradient-to-b from-[#FF5C38] via-[#FF6D40] to-[#FF7E47] px-4 pt-4 pb-6 rounded-b-[2rem] shadow-md text-white">
-        
-        {/* Top Bar: Supermarket Brand Header */}
-        <div className="flex items-center justify-between gap-3 mb-4">
-          <div className="flex items-center space-x-2.5">
-            <div className="w-11 h-11 rounded-2xl bg-white p-1 border border-white/40 shadow-sm flex items-center justify-center overflow-hidden shrink-0">
-              <img 
-                src="/al-salhiya-logo.jpg" 
-                alt="Al Salhiya Logo" 
-                className="w-full h-full object-contain" 
-              />
+      <section className="relative overflow-hidden text-white rounded-b-[1.75rem] shadow-lg">
+        {/* Background */}
+        <div className="absolute inset-0 bg-[#0e1d4a]">
+          {heroImage ? (
+            <img
+              src={heroImage}
+              alt={brandName}
+              className="absolute inset-0 w-full h-full object-cover object-center animate-hero-ken-burns"
+            />
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-br from-[#1a3a9e] via-[#0e1d4a] to-[#0a1228]">
+              <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-[#FF7622]/15 blur-3xl" />
+              <div className="absolute -bottom-20 -left-10 w-64 h-64 rounded-full bg-amber-400/10 blur-3xl" />
             </div>
-            <div className="leading-tight">
-              <div className="flex items-center space-x-1.5">
-                <span className="text-base font-black text-white tracking-tight">Al Salhiya</span>
-                <span className="text-xs font-bold text-amber-200">الصالحية</span>
-              </div>
-              <span className="text-[10px] text-white/80 font-bold uppercase tracking-wider block">
-                SUPERMARKET CATALOG
-              </span>
-            </div>
-          </div>
-
-          {/* Right Action: Language Switch Dropdown (Identical Pill Design + English, Arabic, Hindi) */}
-          <div className="relative" ref={langDropdownRef}>
-            <button
-              type="button"
-              onClick={() => setIsLangOpen((prev) => !prev)}
-              aria-expanded={isLangOpen}
-              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-white text-[11px] font-bold hover:bg-white/25 active:scale-95 transition-all shadow-xs cursor-pointer select-none"
-            >
-              <Globe className="w-3.5 h-3.5 text-amber-200 shrink-0" />
-              <span>{currentLangObj.native}</span>
-              <ChevronDown className={cn("w-3 h-3 text-white/80 transition-transform duration-200", isLangOpen && "rotate-180")} />
-            </button>
-
-            {isLangOpen && (
-              <div className="absolute right-0 top-full mt-2 w-44 bg-white rounded-2xl shadow-xl border border-slate-100 p-1.5 z-50 text-slate-800 animate-in fade-in zoom-in-95 duration-150">
-                <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 mb-1">
-                  {t.selectLanguage}
-                </div>
-                {LANGUAGES.map((lang) => {
-                  const isSelected = selectedLang === lang.code;
-                  return (
-                    <button
-                      key={lang.code}
-                      type="button"
-                      onClick={() => handleSelectLang(lang.code)}
-                      className={cn(
-                        "w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-colors cursor-pointer",
-                        isSelected
-                          ? "bg-orange-50 text-[#FF7622] font-black"
-                          : "text-slate-700 hover:bg-slate-50 font-semibold"
-                      )}
-                    >
-                      <div className="flex items-center space-x-2">
-                        <span className="text-xs">{lang.native}</span>
-                        <span className="text-[10px] text-slate-400 font-normal">({lang.label})</span>
-                      </div>
-                      {isSelected && <Check className="w-3.5 h-3.5 text-[#FF7622]" />}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-[#0e1d4a]/50 to-[#0a1228]/95" />
         </div>
 
-        {/* Capsule Search Bar */}
-        <div className="relative mt-2">
-          <div className="flex items-center bg-white rounded-full px-4 py-2.5 shadow-sm text-slate-800">
-            <Search className="w-4 h-4 text-[#FF7622] shrink-0 mr-2.5" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t.searchPlaceholder}
-              className="w-full text-xs font-semibold bg-transparent placeholder:text-slate-400 focus:outline-none"
-            />
-            {searchQuery ? (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="text-slate-400 hover:text-slate-700 text-xs px-1"
-              >
-                ✕
-              </button>
-            ) : (
-              <div className="w-6 h-6 rounded-full bg-[#FF7622]/10 flex items-center justify-center text-[#FF7622] shrink-0">
-                <SlidersHorizontal className="w-3 h-3" />
+        <div className="relative z-10 flex flex-col px-4 pt-3 pb-4 min-h-[42vh]">
+          {/* Top bar */}
+          <div className="flex items-center justify-between gap-2 shrink-0">
+            <div className="flex items-center space-x-2 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-white p-0.5 shadow-sm flex items-center justify-center overflow-hidden shrink-0">
+                <img src={brandLogo} alt={brandName} className="w-full h-full object-contain" />
               </div>
-            )}
+              <div className="leading-tight min-w-0">
+                <span className="text-[13px] font-black text-white tracking-tight block truncate">
+                  {brandName}
+                </span>
+                <span className="text-[9px] text-amber-200/90 font-bold tracking-wide block truncate">
+                  {t.heroTag}
+                </span>
+              </div>
+            </div>
+
+            <div className="relative shrink-0" ref={langDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setIsLangOpen((prev) => !prev)}
+                aria-expanded={isLangOpen}
+                className="flex items-center space-x-1 px-2.5 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-white text-[10px] font-bold active:scale-95 transition-all cursor-pointer select-none"
+              >
+                <Globe className="w-3 h-3 text-amber-200 shrink-0" />
+                <span>{currentLangObj.native}</span>
+                <ChevronDown className={cn('w-3 h-3 text-white/80 transition-transform duration-200', isLangOpen && 'rotate-180')} />
+              </button>
+
+              {isLangOpen && (
+                <div className="absolute right-0 top-full mt-2 w-44 bg-white rounded-2xl shadow-xl border border-slate-100 p-1.5 z-50 text-slate-800 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 mb-1">
+                    {t.selectLanguage}
+                  </div>
+                  {LANGUAGES.map((lang) => {
+                    const isSelected = selectedLang === lang.code;
+                    return (
+                      <button
+                        key={lang.code}
+                        type="button"
+                        onClick={() => handleSelectLang(lang.code)}
+                        className={cn(
+                          'w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-colors cursor-pointer',
+                          isSelected
+                            ? 'bg-orange-50 text-[#FF7622] font-black'
+                            : 'text-slate-700 hover:bg-slate-50 font-semibold'
+                        )}
+                      >
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs">{lang.native}</span>
+                          <span className="text-[10px] text-slate-400 font-normal">({lang.label})</span>
+                        </div>
+                        {isSelected && <Check className="w-3.5 h-3.5 text-[#FF7622]" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Spacer pushes content toward bottom */}
+          <div className="flex-1 min-h-[1.25rem]" />
+
+          {/* Hero copy + CTAs */}
+          <div className="space-y-3 shrink-0">
+            <div className="space-y-1.5">
+              <h1 className="animate-hero-fade-up text-[1.75rem] font-black leading-[1.15] tracking-tight">
+                {t.heroTitle1}
+              </h1>
+              <p className="animate-hero-fade-up-delay-1 text-[11px] text-white/80 font-medium leading-relaxed line-clamp-2">
+                {appearance?.tagline || t.heroDesc}
+              </p>
+            </div>
+
+            <div className="animate-hero-fade-up-delay-2 grid grid-cols-2 gap-2">
+              <button
+                onClick={() => {
+                  const el = document.getElementById('daily-categories-block')
+                    || document.getElementById('supermarket-products-section');
+                  el?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="h-10 rounded-full bg-[#FF7622] text-white text-[11px] font-black shadow-md shadow-orange-500/25 active:scale-95 transition-all flex items-center justify-center space-x-1"
+              >
+                <span className="truncate">{t.browseCategories}</span>
+                <ArrowRight className="w-3.5 h-3.5 shrink-0" />
+              </button>
+              <button
+                onClick={() => onNavigate?.('about')}
+                className="h-10 rounded-full bg-white/12 border border-white/35 text-white text-[11px] font-black backdrop-blur-sm active:scale-95 transition-all flex items-center justify-center"
+              >
+                <span className="truncate">{t.fullCatalogList}</span>
+              </button>
+            </div>
+
+            {/* Search */}
+            <div className="animate-hero-fade-up-delay-3 flex items-center bg-white rounded-full px-3.5 py-2.5 shadow-lg text-slate-800">
+              <Search className="w-4 h-4 text-[#FF7622] shrink-0 mr-2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t.searchPlaceholder}
+                className="w-full text-xs font-semibold bg-transparent placeholder:text-slate-400 focus:outline-none"
+              />
+              {searchQuery ? (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="text-slate-400 hover:text-slate-700 text-xs px-1"
+                >
+                  ✕
+                </button>
+              ) : (
+                <div className="w-6 h-6 rounded-full bg-[#FF7622]/10 flex items-center justify-center text-[#FF7622] shrink-0">
+                  <SlidersHorizontal className="w-3 h-3" />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </section>
 
       {/* =============================================================
-          2. STORE STATUS STRIP (Open Hours & 100% In-Store Fresh)
+          2. TRUST HIGHLIGHTS — Minimal icon row
          ============================================================= */}
-      <section className="px-4 mt-3">
-        <div className="bg-white rounded-2xl p-2.5 border border-slate-200/80 shadow-2xs grid grid-cols-2 divide-x divide-slate-100 text-[11px] font-bold text-slate-600">
-          <div className="flex items-center space-x-2 pl-2">
-            <div className="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-              <Clock className="w-3.5 h-3.5" />
-            </div>
-            <div>
-              <span className="text-[10px] text-slate-400 block font-medium">{t.storeHours}</span>
-              <span className="text-slate-800 font-black">{t.openHours}</span>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2 pl-3">
-            <div className="w-6 h-6 rounded-lg bg-orange-50 text-[#FF7622] flex items-center justify-center shrink-0">
-              <ShieldCheck className="w-3.5 h-3.5" />
-            </div>
-            <div>
-              <span className="text-[10px] text-slate-400 block font-medium">{t.verifiedFresh}</span>
-              <span className="text-slate-800 font-black">{t.freshLabel}</span>
-            </div>
+      <section className="px-4 mt-3.5">
+        <div className="bg-white rounded-2xl border border-slate-100 px-2 py-3 shadow-2xs">
+          <div className="grid grid-cols-4 gap-1">
+            {[
+              {
+                icon: Award,
+                label: 'Est. 1991',
+                color: 'text-[#18308c]',
+                bg: 'bg-[#18308c]/8',
+                delay: '0ms',
+              },
+              {
+                icon: Clock,
+                label: '8–11 PM',
+                color: 'text-[#FF7622]',
+                bg: 'bg-orange-50',
+                delay: '70ms',
+              },
+              {
+                icon: Truck,
+                label: 'Kuwait',
+                color: 'text-teal-600',
+                bg: 'bg-teal-50',
+                delay: '140ms',
+              },
+              {
+                icon: ShieldCheck,
+                label: 'Quality',
+                color: 'text-emerald-600',
+                bg: 'bg-emerald-50',
+                delay: '210ms',
+              },
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={item.label}
+                  className="animate-trust-chip flex flex-col items-center text-center gap-1.5 active:scale-95 transition-transform"
+                  style={{ animationDelay: item.delay }}
+                >
+                  <div
+                    className={cn(
+                      'w-10 h-10 rounded-full flex items-center justify-center',
+                      item.bg,
+                      item.color
+                    )}
+                  >
+                    <Icon className="w-4 h-4 animate-trust-icon-pulse" strokeWidth={2.25} />
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-600 leading-tight">
+                    {item.label}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>

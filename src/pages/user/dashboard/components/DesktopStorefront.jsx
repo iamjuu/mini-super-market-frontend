@@ -1,32 +1,21 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
-  Search, 
   Sparkles, 
   ArrowRight, 
   Eye, 
-  Layers, 
   Grid, 
-  Tag, 
   Store, 
   CheckCircle2, 
   ChevronRight, 
-  ChevronLeft,
-  Filter,
-  X,
-  Phone,
-  MapPin,
-  Clock,
   ShieldCheck,
   ChevronDown,
-  Facebook,
-  Instagram,
-  Linkedin,
-  ArrowUp
+  Cookie,
 } from 'lucide-react';
 import ApiClient from '../../../../api/client';
 import { Button } from '../../../../components/ui/button';
 import { Badge } from '../../../../components/ui/badge';
 import { cn } from '../../../../lib/utils';
+import { usePlatform } from '../../../../context/PlatformContext';
 
 // Fallback high-quality food/grocery images by keyword
 const getCategoryFallbackImage = (name = '') => {
@@ -63,15 +52,22 @@ const getProductFallbackImage = (name = '') => {
 import { getTranslation, getAppLanguage } from '../../../../locales';
 
 export const DesktopStorefront = ({ onNavigate }) => {
+  const { appearance } = usePlatform();
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [products, setProducts] = useState([]);
   const [offers, setOffers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [rangeVisible, setRangeVisible] = useState(false);
+  const rangeSectionRef = useRef(null);
 
   // Language state (synced with app_language)
   const [selectedLang, setSelectedLang] = useState(getAppLanguage);
+
+  const heroImage = appearance?.heroImageUrl || '';
+  const brandName = appearance?.platformName || 'Alfaysal Bakery';
+  const brandLogo = appearance?.logoUrl || '/al-salhiya-logo.jpg';
 
   useEffect(() => {
     const handleLangSync = (e) => {
@@ -79,6 +75,23 @@ export const DesktopStorefront = ({ onNavigate }) => {
     };
     window.addEventListener('app_language_changed', handleLangSync);
     return () => window.removeEventListener('app_language_changed', handleLangSync);
+  }, []);
+
+  // Reveal "What We Bake" cards on scroll
+  useEffect(() => {
+    const el = rangeSectionRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setRangeVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.15 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
   const t = getTranslation(selectedLang);
@@ -89,14 +102,6 @@ export const DesktopStorefront = ({ onNavigate }) => {
   const [selectedBrand, setSelectedBrand] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [quickViewProduct, setQuickViewProduct] = useState(null);
-  const desktopCatScrollRef = useRef(null);
-
-  const scrollCategories = (direction) => {
-    if (desktopCatScrollRef.current) {
-      const scrollAmount = direction === 'left' ? -350 : 350;
-      desktopCatScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-    }
-  };
 
   // Live fetch from database API (the 5 collections)
   useEffect(() => {
@@ -246,233 +251,229 @@ export const DesktopStorefront = ({ onNavigate }) => {
     <div className="w-full bg-[#FFFFFF] font-sans selection:bg-[#FF7622]/20">
       
       {/* =============================================================
-          1. HERO BANNER: Al Salhiya Digital Supermarket Catalog
+          1. HERO — Full-bleed brand hero (admin image)
          ============================================================= */}
-      <section className="relative bg-gradient-to-b from-[#FFF8F3] via-[#FFFDFB] to-white overflow-hidden py-14 lg:py-20 border-b border-orange-100/70">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center justify-between gap-10">
-          
-          {/* Left Text */}
-          <div className="lg:w-1/2 space-y-5 text-left">
-            <div className="inline-flex items-center space-x-2 text-[11px] font-black uppercase tracking-wider text-[#FF7824] bg-orange-100/70 px-3.5 py-1.5 rounded-full border border-orange-200/60 shadow-2xs">
-              <span className="w-2 h-2 rounded-full bg-[#FF7824] animate-pulse"></span>
+      <section className="relative min-h-[72vh] lg:min-h-[78vh] overflow-hidden flex items-end lg:items-center">
+        {/* Background image from admin (or branded fallback) */}
+        <div className="absolute inset-0 bg-[#0e1d4a]">
+          {heroImage ? (
+            <img
+              src={heroImage}
+              alt={brandName}
+              className="w-full h-full object-cover animate-hero-ken-burns"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-[#18308c] via-[#0e1d4a] to-[#1a0f08] flex items-center justify-center">
+              <img
+                src={brandLogo}
+                alt={brandName}
+                className="w-40 h-40 object-contain opacity-30"
+              />
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0a1228]/90 via-[#0e1d4a]/72 to-[#0e1d4a]/35" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a1228]/80 via-transparent to-black/20" />
+        </div>
+
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+          <div className="max-w-xl text-left text-white space-y-5">
+            <div className="animate-hero-fade-up inline-flex items-center space-x-2 text-[11px] font-bold uppercase tracking-[0.2em] text-amber-200/95">
+              <span className="w-8 h-px bg-amber-300/80" />
               <span>{t.heroTag}</span>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#0E1D4A] leading-[1.15] tracking-tight">
-              {t.heroTitle1} <br />
-              <span className="text-[#18308C]">{t.heroTitle2}</span>
-            </h1>
-
-            <p className="text-xs sm:text-sm text-slate-600 max-w-lg leading-relaxed font-normal">
-              {t.heroDesc}
+            <p className="animate-hero-fade-up-delay-1 text-sm font-semibold text-white/70 tracking-wide">
+              {brandName}
             </p>
 
-            {/* Quick Action Badges */}
-            <div className="pt-2 flex flex-wrap items-center gap-3">
+            <h1 className="animate-hero-fade-up-delay-1 text-4xl sm:text-5xl lg:text-6xl font-black leading-[1.08] tracking-tight">
+              {t.heroTitle1}
+              {t.heroTitle2 ? (
+                <>
+                  <br />
+                  <span className="text-amber-300">{t.heroTitle2}</span>
+                </>
+              ) : null}
+            </h1>
+
+            <p className="animate-hero-fade-up-delay-2 text-sm sm:text-base text-white/80 max-w-md leading-relaxed font-medium">
+              {appearance?.tagline || t.heroDesc}
+            </p>
+
+            <div className="animate-hero-fade-up-delay-3 pt-2 flex flex-wrap items-center gap-3">
               <button
                 onClick={() => {
-                  const el = document.getElementById('categories-section');
+                  const el = document.getElementById('what-we-bake-section');
                   el?.scrollIntoView({ behavior: 'smooth' });
                 }}
-                className="px-6 py-3 rounded-2xl bg-[#FF7622] hover:bg-[#E56314] text-white font-black text-xs shadow-md shadow-orange-500/20 active:scale-95 transition-all flex items-center space-x-2"
+                className="px-7 py-3.5 rounded-full bg-[#FF7622] hover:bg-[#E56314] text-white font-black text-xs shadow-lg shadow-orange-500/30 hover:shadow-orange-500/45 hover:-translate-y-0.5 active:scale-95 transition-all duration-300 flex items-center space-x-2"
               >
                 <span>{t.browseCategories}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
               <button
-                onClick={() => onNavigate?.('shop')}
-                className="px-6 py-3 rounded-2xl bg-white border border-slate-200 text-slate-800 font-black text-xs hover:border-[#FF7622] hover:text-[#FF7622] shadow-2xs active:scale-95 transition-all flex items-center space-x-2"
+                onClick={() => onNavigate?.('about')}
+                className="px-7 py-3.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/35 text-white font-black text-xs backdrop-blur-sm hover:-translate-y-0.5 active:scale-95 transition-all duration-300"
               >
-                <span>{t.fullCatalogList}</span>
-                <Grid className="w-4 h-4" />
+                {t.fullCatalogList}
               </button>
             </div>
 
-            {/* In-Store Notice */}
-            <div className="pt-2 flex items-center space-x-6 text-[11px] text-slate-500 font-semibold">
+            <div className="animate-hero-fade-up-delay-3 pt-3 flex flex-wrap items-center gap-5 text-[11px] text-white/65 font-semibold">
               <div className="flex items-center space-x-1.5">
-                <Store className="w-4 h-4 text-emerald-600" />
+                <Store className="w-3.5 h-3.5 text-amber-300" />
                 <span>{t.physicalStock}</span>
               </div>
               <div className="flex items-center space-x-1.5">
-                <ShieldCheck className="w-4 h-4 text-[#18308C]" />
+                <ShieldCheck className="w-3.5 h-3.5 text-amber-300" />
                 <span>{t.verifiedQuality}</span>
               </div>
             </div>
           </div>
-
-          {/* Right Image */}
-          <div className="lg:w-1/2 relative flex items-center justify-center">
-            <div className="relative w-full max-w-lg">
-              <div className="rounded-3xl overflow-hidden shadow-2xl border border-orange-100 bg-white p-2">
-                <img
-                  src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&auto=format&fit=crop&q=80"
-                  alt="Al Salhiya Supermarket"
-                  className="w-full h-72 sm:h-80 object-cover rounded-2xl hover:scale-105 transition-transform duration-700"
-                />
-              </div>
-
-              {/* Floating Supermarket Badge */}
-              <div className="absolute -bottom-4 -left-4 sm:left-4 bg-white/95 backdrop-blur-md p-3 rounded-2xl border border-slate-200 shadow-xl flex items-center space-x-3">
-                <div className="w-12 h-12 rounded-xl bg-orange-50 border border-orange-100 p-1 flex items-center justify-center overflow-hidden">
-                  <img src="/al-salhiya-logo.jpg" alt="Al Salhiya Logo" className="w-full h-full object-contain" />
-                </div>
-                <div className="text-left leading-tight pr-2">
-                  <span className="text-xs font-black text-[#18308c] block">Al Salhiya Supermarket</span>
-                  <span className="text-[10px] text-[#ff7824] font-bold">الصالحية • Premium Fresh</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
         </div>
       </section>
 
       {/* =============================================================
-          2. STEP 1: CATEGORIES SECTION WITH IMAGES
+          2. WHAT WE BAKE — Aesthetic heritage gallery
          ============================================================= */}
-      <section id="categories-section" className="py-14 bg-white border-b border-slate-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
-            <div>
-              <div className="inline-flex items-center space-x-1.5 text-[11px] font-black uppercase tracking-wider text-[#FF7622] mb-1">
-                <Layers className="w-3.5 h-3.5" />
-                <span>{t.step1Tag}</span>
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-black text-[#1F2229] tracking-tight">
-                {t.categoriesTitle}
-              </h2>
-              <p className="text-xs text-slate-500 font-medium mt-1">
-                {t.categoriesDesc}
-              </p>
+      <section
+        id="what-we-bake-section"
+        ref={rangeSectionRef}
+        className="relative py-20 lg:py-28 overflow-hidden border-b border-[#eadfce]/80"
+      >
+        {/* Soft bakery atmosphere */}
+        <div className="absolute inset-0 bg-[#FBF7F1]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(255,186,24,0.12),_transparent_55%),radial-gradient(ellipse_at_bottom_right,_rgba(24,48,140,0.06),_transparent_50%)]" />
+        <div
+          className="absolute inset-0 opacity-[0.35]"
+          style={{
+            backgroundImage:
+              'radial-gradient(rgba(120,90,50,0.07) 0.7px, transparent 0.7px)',
+            backgroundSize: '18px 18px',
+          }}
+        />
+
+        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Centered elegant header */}
+          <div className="text-center max-w-2xl mx-auto mb-14 lg:mb-16 space-y-4">
+            <div className="flex items-center justify-center gap-3">
+              <span className="h-px w-10 sm:w-14 bg-gradient-to-r from-transparent to-[#d4a017]" />
+              <span className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.28em] text-[#b8870f]">
+                <Cookie className="w-3.5 h-3.5" />
+                {t.exploreRange}
+              </span>
+              <span className="h-px w-10 sm:w-14 bg-gradient-to-l from-transparent to-[#d4a017]" />
             </div>
+
+            <h2 className="text-3xl sm:text-4xl lg:text-[2.75rem] font-black text-[#1a1630] tracking-[-0.03em] leading-tight">
+              {t.whatWeBake}
+            </h2>
+            <p className="text-sm sm:text-[15px] text-[#6f6680] font-medium leading-relaxed max-w-md mx-auto">
+              {t.whatWeBakeDesc}
+            </p>
           </div>
 
-          {/* Categories Horizontal Scroll Row - Single Line (No 2nd Line Wrap) */}
           {isLoading ? (
-            <div className="flex items-start gap-4 sm:gap-6 overflow-x-auto no-scrollbar py-2 px-1">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
-                <div key={i} className="flex flex-col items-center space-y-2 w-24 sm:w-28 shrink-0">
-                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-slate-100 animate-pulse" />
-                  <div className="h-4 w-16 bg-slate-100 rounded animate-pulse" />
-                  <div className="h-3 w-12 bg-slate-100 rounded animate-pulse" />
+            <div className="flex items-center gap-10 overflow-hidden py-4">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="flex flex-col items-center gap-4 shrink-0">
+                  <div className="w-32 h-32 sm:w-36 sm:h-36 rounded-full bg-[#efe8dc] animate-pulse" />
+                  <div className="h-3 w-20 rounded-full bg-[#efe8dc] animate-pulse" />
                 </div>
               ))}
             </div>
-          ) : (
-            <div className="relative group">
-              {/* Prev Scroll Button */}
-              <button
-                type="button"
-                onClick={() => scrollCategories('left')}
-                className="absolute -left-3 top-12 z-20 w-9 h-9 rounded-full bg-white shadow-lg border border-slate-200 text-slate-700 hover:text-[#FF7622] hover:border-[#FF7622] flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 active:scale-90"
-                title="Scroll Left"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
+          ) : categories.length > 0 ? (
+            <div className="relative -mx-4 sm:-mx-6 lg:-mx-8">
+              {/* Soft edge fades */}
+              <div className="pointer-events-none absolute inset-y-0 left-0 w-12 sm:w-20 z-10 bg-gradient-to-r from-[#FBF7F1] to-transparent" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 w-12 sm:w-20 z-10 bg-gradient-to-l from-[#FBF7F1] to-transparent" />
 
-              {/* Single Line Scroll Container */}
-              <div 
-                ref={desktopCatScrollRef}
-                className="flex items-start gap-4 sm:gap-6 overflow-x-auto no-scrollbar scroll-smooth py-2 px-1"
-              >
-                {/* 'All Items' Circular Button */}
-                <button
-                  onClick={() => {
-                    setSelectedCategory(null);
-                    setSelectedSubcategory(null);
-                  }}
-                  className="flex flex-col items-center space-y-2 group/item w-24 sm:w-28 shrink-0 cursor-pointer transition-all active:scale-95"
-                >
-                  <div className={cn(
-                    "w-20 h-20 sm:w-24 sm:h-24 aspect-square rounded-full overflow-hidden transition-all duration-300 relative flex items-center justify-center shrink-0",
-                    !selectedCategory
-                      ? "bg-[#181C2E] text-white border-[3px] border-[#181C2E] shadow-[0_6px_20px_rgba(24,28,46,0.35)] scale-105"
-                      : "bg-slate-100 text-slate-700 border-2 border-slate-200 hover:border-slate-300 hover:shadow-md group-hover/item:scale-105"
-                  )}>
-                    <Grid className={cn(
-                      "w-8 h-8 sm:w-9 sm:h-9 shrink-0 transition-transform duration-300",
-                      !selectedCategory ? "scale-110" : "group-hover/item:scale-110"
-                    )} />
-                  </div>
-                  <div className="flex flex-col items-center text-center">
-                    <h3 className={cn(
-                      "text-xs sm:text-sm font-bold text-center leading-snug transition-colors line-clamp-1",
-                      !selectedCategory ? "text-[#181C2E] font-black" : "text-slate-800 group-hover/item:text-[#FF7622]"
-                    )}>
-                      {t.allItems}
-                    </h3>
-                    <span className="text-[11px] font-semibold text-slate-400">
-                      {t.entireStore}
-                    </span>
-                    {!selectedCategory && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#181C2E] animate-pulse mt-1" />
-                    )}
-                  </div>
-                </button>
-
-                {/* Dynamic Categories as Circular Buttons */}
-                {categories.map((cat) => {
-                  const isSelected = selectedCategory?._id === cat._id;
-                  const catImg = cat.image || getCategoryFallbackImage(cat.name);
-
-                  return (
-                    <button
-                      key={cat._id}
-                      onClick={() => handleSelectCategory(cat)}
-                      className="flex flex-col items-center space-y-2 group/item w-24 sm:w-28 shrink-0 cursor-pointer transition-all active:scale-95"
-                    >
-                      <div className={cn(
-                        "w-20 h-20 sm:w-24 sm:h-24 aspect-square rounded-full overflow-hidden transition-all duration-300 p-0.5 bg-white relative flex items-center justify-center shrink-0",
-                        isSelected
-                          ? "border-[3px] border-[#FF7622] shadow-[0_6px_20px_rgba(255,118,34,0.38)] scale-105 ring-4 ring-[#FF7622]/20"
-                          : "border-2 border-slate-200/90 hover:border-slate-300 hover:shadow-md group-hover/item:scale-105"
-                      )}>
-                        <img
-                          src={catImg}
-                          alt={cat.name}
+              <div className="overflow-hidden py-4 group/marquee">
+                <div className="flex w-max animate-marquee-right hover:[animation-play-state:paused]">
+                  {[...categories, ...categories].map((cat, idx) => {
+                    const catImg = cat.image || getCategoryFallbackImage(cat.name);
+                    const isSelected = selectedCategory?._id === cat._id;
+                    return (
+                      <button
+                        key={`${cat._id}-${idx}`}
+                        type="button"
+                        onClick={() => handleSelectCategory(cat)}
+                        className="group flex flex-col items-center text-center focus:outline-none shrink-0 mx-5 sm:mx-7"
+                      >
+                        <div
                           className={cn(
-                            "w-full h-full aspect-square object-cover rounded-full block select-none pointer-events-none transition-transform duration-300",
-                            isSelected ? "scale-105" : "group-hover/item:scale-105"
+                            'relative w-32 h-32 sm:w-36 sm:h-36 rounded-full p-[3px] transition-all duration-500 ease-out',
+                            isSelected
+                              ? 'bg-gradient-to-br from-[#FF7622] via-[#ffba18] to-[#18308c] shadow-[0_12px_30px_rgba(255,118,34,0.28)] scale-[1.03]'
+                              : 'bg-gradient-to-br from-[#e8dcc8] via-[#f3ebe0] to-[#d9cbb6] group-hover:from-[#FF7622]/70 group-hover:via-[#ffba18]/50 group-hover:to-[#18308c]/40 group-hover:shadow-[0_14px_32px_rgba(24,48,140,0.12)] group-hover:scale-[1.04]'
                           )}
-                          loading="lazy"
-                        />
-                        {isSelected && (
-                          <div className="absolute inset-0 bg-[#FF7622]/10 rounded-full pointer-events-none" />
-                        )}
-                      </div>
+                        >
+                          <div className="w-full h-full rounded-full overflow-hidden bg-white p-1">
+                            <div className="w-full h-full rounded-full overflow-hidden relative">
+                              <img
+                                src={catImg}
+                                alt={cat.name}
+                                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                                loading="lazy"
+                                draggable={false}
+                              />
+                              <div className="absolute inset-0 bg-[#1a1630]/0 group-hover:bg-[#1a1630]/10 transition-colors duration-500" />
+                            </div>
+                          </div>
 
-                      <div className="flex flex-col items-center text-center">
-                        <h3 className={cn(
-                          "text-xs sm:text-sm font-bold text-center leading-snug transition-colors line-clamp-2 max-w-[105px]",
-                          isSelected ? "text-[#FF7622] font-black" : "text-slate-800 group-hover/item:text-[#FF7622]"
-                        )}>
-                          {cat.name}
-                        </h3>
+                          <span
+                            className={cn(
+                              'absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-white shadow-md border border-[#eadfce] flex items-center justify-center transition-all duration-300',
+                              isSelected
+                                ? 'opacity-100 translate-y-0 bg-[#FF7622] border-[#FF7622] text-white'
+                                : 'opacity-0 translate-y-1 text-[#18308c] group-hover:opacity-100 group-hover:translate-y-0'
+                            )}
+                          >
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </span>
+                        </div>
 
-                        {isSelected && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#FF7622] animate-pulse mt-1" />
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
+                        <div className="mt-4 space-y-1.5 px-1 w-32 sm:w-36">
+                          <h3
+                            className={cn(
+                              'text-[13px] sm:text-sm font-black tracking-tight leading-snug transition-colors duration-300 line-clamp-2',
+                              isSelected ? 'text-[#FF7622]' : 'text-[#1a1630] group-hover:text-[#FF7622]'
+                            )}
+                          >
+                            {cat.name}
+                          </h3>
+                          <span
+                            className={cn(
+                              'mx-auto block h-0.5 rounded-full transition-all duration-500',
+                              isSelected
+                                ? 'w-8 bg-[#FF7622]'
+                                : 'w-0 bg-[#FF7622] group-hover:w-8'
+                            )}
+                          />
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-
-              {/* Next Scroll Button */}
-              <button
-                type="button"
-                onClick={() => scrollCategories('right')}
-                className="absolute -right-3 top-12 z-20 w-9 h-9 rounded-full bg-white shadow-lg border border-slate-200 text-slate-700 hover:text-[#FF7622] hover:border-[#FF7622] flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 active:scale-90"
-                title="Scroll Right"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
             </div>
-          )}
+          ) : null}
 
+          <div className="mt-12 flex justify-center">
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedCategory(null);
+                setSelectedSubcategory(null);
+                document.getElementById('catalog-browser-section')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-[#d9cbb6] bg-white/80 backdrop-blur-sm text-xs font-black text-[#1a1630] hover:border-[#FF7622] hover:text-[#FF7622] hover:shadow-md transition-all duration-300 active:scale-95"
+            >
+              <span>{t.browseCategories}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </section>
 
@@ -805,124 +806,7 @@ export const DesktopStorefront = ({ onNavigate }) => {
       </section>
 
       {/* =============================================================
-          4. SUPERMARKET FOOTER
-         ============================================================= */}
-      <footer className="bg-[#181C2E] text-stone-300 pt-12 pb-10 border-t border-stone-800 font-sans">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-          
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-8 border-b border-stone-800 text-left">
-            {/* 1. Brand Logo & Tagline */}
-            <div className="space-y-3">
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 rounded-2xl bg-white p-1 flex items-center justify-center overflow-hidden shrink-0">
-                  <img src="/al-salhiya-logo.jpg" alt="Al Salhiya Logo" className="w-full h-full object-contain" />
-                </div>
-                <div>
-                  <span className="text-lg font-black text-white tracking-tight block">Al Salhiya Supermarket</span>
-                  <span className="text-xs text-amber-500 font-bold block">الصالحية • In-Store Digital Catalog</span>
-                </div>
-              </div>
-              <p className="text-xs text-stone-400 leading-relaxed max-w-xs">
-                Baking premium snacks with love and tradition since 1991.
-              </p>
-            </div>
-
-            {/* 2. Quick Links */}
-            <div className="space-y-3">
-              <h4 className="text-sm font-bold text-white tracking-tight">{t.quickLinks}</h4>
-              <ul className="space-y-2 text-xs text-stone-400">
-                <li>
-                  <button onClick={() => { onNavigate?.('home'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-[#FF7622] transition-colors cursor-pointer text-left">
-                    {t.home}
-                  </button>
-                </li>
-                <li>
-                  <button onClick={() => { onNavigate?.('shop'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-[#FF7622] transition-colors cursor-pointer text-left">
-                    {t.catalog}
-                  </button>
-                </li>
-                <li>
-                  <button onClick={() => { onNavigate?.('about'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-[#FF7622] transition-colors cursor-pointer text-left">
-                    {t.ourStory}
-                  </button>
-                </li>
-                <li>
-                  <button onClick={() => { onNavigate?.('news'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-[#FF7622] transition-colors cursor-pointer text-left">
-                    {t.media}
-                  </button>
-                </li>
-                <li>
-                  <button onClick={() => { onNavigate?.('contact'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-[#FF7622] transition-colors cursor-pointer text-left">
-                    {t.contact}
-                  </button>
-                </li>
-              </ul>
-            </div>
-
-            {/* 3. Categories */}
-            <div className="space-y-3">
-              <h4 className="text-sm font-bold text-white tracking-tight">{t.categories}</h4>
-              <ul className="space-y-2 text-xs text-stone-400">
-                {['Croissant', 'Fatayer', 'Pizza', 'Cupcakes', 'Tasbeera', 'Rusk & Toast'].map((cat) => (
-                  <li key={cat}>
-                    <button 
-                      onClick={() => { onNavigate?.('shop'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} 
-                      className="hover:text-[#FF7622] transition-colors cursor-pointer text-left"
-                    >
-                      {cat}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* 4. Get in touch */}
-            <div className="space-y-3">
-              <h4 className="text-sm font-bold text-white tracking-tight">{t.getInTouch}</h4>
-              <div className="space-y-2 text-xs text-stone-400">
-                <p>
-                  <a href="tel:+96524739900" className="hover:text-[#FF7622] transition-colors">
-                    +965 24739900
-                  </a>
-                </p>
-                <p>
-                  <a href="mailto:info@alfaysalgroup.com" className="hover:text-[#FF7622] transition-colors">
-                    info@alfaysalgroup.com
-                  </a>
-                </p>
-                <div className="flex items-center space-x-3.5 pt-2 text-stone-300">
-                  <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#FF7622] transition-colors" title="Facebook">
-                    <Facebook className="w-4 h-4 fill-current stroke-none" />
-                  </a>
-                  <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#FF7622] transition-colors" title="Instagram">
-                    <Instagram className="w-4 h-4" />
-                  </a>
-                  <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#FF7622] transition-colors" title="LinkedIn">
-                    <Linkedin className="w-4 h-4 fill-current stroke-none" />
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-stone-500 gap-4">
-            <p>{t.copyright}</p>
-            <button
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="w-9 h-9 rounded-full bg-[#272052] hover:bg-[#352c70] text-white flex items-center justify-center transition-all shadow-md active:scale-95 cursor-pointer"
-              title="Scroll to top"
-            >
-              <ArrowUp className="w-4 h-4" />
-            </button>
-          </div>
-
-        </div>
-      </footer>
-
-
-
-      {/* =============================================================
-          5. QUICK VIEW MODAL (Catalog Details)
+          QUICK VIEW MODAL (Catalog Details)
          ============================================================= */}
       {quickViewProduct && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">

@@ -161,3 +161,117 @@ body {
 .animate-nav-ripple {
   animation: nav-ripple 0.45s ease-out forwards;
 }
+
+/* Home Hero & Range Section Animations */
+@keyframes hero-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes hero-ken-burns {
+  from {
+    transform: scale(1.08);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes range-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-hero-fade-up {
+  animation: hero-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-hero-fade-up-delay-1 {
+  animation: hero-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
+}
+
+.animate-hero-fade-up-delay-2 {
+  animation: hero-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.24s both;
+}
+
+.animate-hero-fade-up-delay-3 {
+  animation: hero-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.36s both;
+}
+
+.animate-hero-ken-burns {
+  animation: hero-ken-burns 12s ease-out forwards;
+}
+
+.animate-range-card {
+  animation: range-card-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Infinite single-row marquee (floats to the right) */
+@keyframes marquee-right {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-marquee-right {
+  animation: marquee-right 35s linear infinite;
+}
+
+@keyframes trust-chip-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes trust-icon-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.12);
+  }
+}
+
+.animate-trust-chip {
+  animation: trust-chip-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-trust-icon-pulse {
+  animation: trust-icon-pulse 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-hero-fade-up,
+  .animate-hero-fade-up-delay-1,
+  .animate-hero-fade-up-delay-2,
+  .animate-hero-fade-up-delay-3,
+  .animate-hero-ken-burns,
+  .animate-range-card,
+  .animate-marquee-right,
+  .animate-trust-chip,
+  .animate-trust-icon-pulse {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

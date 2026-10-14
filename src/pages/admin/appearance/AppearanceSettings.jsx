@@ -6,12 +6,16 @@ import {
   AlertCircle,
   Eye,
   Sparkles,
-  Smartphone
+  Upload,
+  Image as ImageIcon,
+  Loader2,
+  Trash2
 } from 'lucide-react';
 import ApiClient from '../../../api/client';
 import { useAuth } from '../../../context/AuthContext';
 import { usePlatform } from '../../../context/PlatformContext';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { compressImage } from '../../../utils/imageCompressor';
 
 export const AppearanceSettings = () => {
   const { user } = useAuth();
@@ -19,6 +23,7 @@ export const AppearanceSettings = () => {
   const { appearance, setAppearance, updateAppearance } = usePlatform();
   const [formData, setFormData] = useState({ ...appearance });
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploadingHero, setIsUploadingHero] = useState(false);
   const [notification, setNotification] = useState(null);
 
   useEffect(() => {
@@ -28,6 +33,38 @@ export const AppearanceSettings = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleHeroImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingHero(true);
+    try {
+      const compressedBase64 = await compressImage(file, {
+        maxWidth: 1920,
+        maxHeight: 1080,
+        quality: 0.85,
+      });
+
+      const res = await ApiClient.post('/upload', {
+        image: compressedBase64,
+        folder: 'shamil_marketplace/hero',
+      });
+
+      const url = res?.data?.url || compressedBase64;
+      setFormData((prev) => ({ ...prev, heroImageUrl: url }));
+    } catch (err) {
+      console.error('Failed to upload hero image:', err);
+      setNotification({
+        type: 'error',
+        title: 'Upload failed',
+        description: 'Could not upload hero image. Try again or paste a URL.',
+      });
+    } finally {
+      setIsUploadingHero(false);
+      e.target.value = '';
+    }
   };
 
   const applyPreset = (primary, secondary) => {
@@ -143,10 +180,84 @@ export const AppearanceSettings = () => {
                     value={formData.tagline || ''}
                     onChange={handleChange}
                     className="w-full px-4 py-2.5 rounded-2xl bg-[#f0f2fb] border border-slate-200/80 text-xs text-[#181829] font-medium focus:outline-none focus:border-[#6339f4]"
-                    placeholder="Everything you need, delivered in minutes."
+                    placeholder="Premium baked snacks, crafted with heritage since 1991"
                   />
                 </div>
               </div>
+            </div>
+
+            {/* Home Hero Image */}
+            <div className="space-y-4 pt-4 border-t border-slate-100">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-black uppercase tracking-wider text-[#18308c] flex items-center space-x-2">
+                  <ImageIcon className="w-4 h-4" />
+                  <span>Home Hero Image</span>
+                </h3>
+                <span className="text-[10px] text-slate-400">Shows on storefront first section</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label className="flex flex-col items-center justify-center p-4 rounded-2xl border-2 border-dashed border-slate-200 hover:border-[#FF7824] bg-[#f8f9fd] hover:bg-orange-50/50 cursor-pointer transition-all text-center group">
+                  <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shadow-xs text-[#FF7824] mb-1.5 group-hover:scale-110 transition-transform">
+                    {isUploadingHero ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-[#FF7824]" />
+                    ) : (
+                      <Upload className="w-4 h-4" />
+                    )}
+                  </div>
+                  <span className="text-xs font-bold text-[#181829]">
+                    {isUploadingHero ? 'Uploading...' : 'Upload Hero Image'}
+                  </span>
+                  <span className="text-[10px] text-slate-400 mt-0.5">
+                    Wide image recommended (1920×1080)
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    disabled={isUploadingHero || isReadOnly}
+                    onChange={handleHeroImageUpload}
+                    className="hidden"
+                  />
+                </label>
+
+                <div className="flex flex-col justify-center space-y-1.5 p-3 rounded-2xl bg-[#f0f2fb] border border-slate-200">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    Or Direct Image URL
+                  </span>
+                  <input
+                    type="url"
+                    name="heroImageUrl"
+                    value={formData.heroImageUrl || ''}
+                    onChange={handleChange}
+                    placeholder="https://..."
+                    className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-medium text-[#181829] focus:outline-none focus:border-[#FF7824]"
+                  />
+                  {formData.heroImageUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData((prev) => ({ ...prev, heroImageUrl: '' }))}
+                      className="self-start flex items-center space-x-1 text-[10px] font-bold text-red-500 hover:text-red-600 mt-1"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span>Clear hero image</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {formData.heroImageUrl && (
+                <div className="relative rounded-2xl overflow-hidden border border-slate-200 h-36 bg-slate-100">
+                  <img
+                    src={formData.heroImageUrl}
+                    alt="Hero preview"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                  <span className="absolute bottom-2 left-3 text-[10px] font-black text-white uppercase tracking-wider">
+                    Live hero preview
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="space-y-4 pt-4 border-t border-slate-100">

@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { MapPin, Phone, Mail, Clock, Send, CheckCircle2, ChevronDown } from 'lucide-react';
+import { usePlatform } from '../../../context/PlatformContext';
 
 export const ContactPage = ({ onNavigate }) => {
+  const { appearance } = usePlatform();
+  const brandName = appearance?.platformName || 'Alfaysal Bakery';
   const [form, setForm] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
@@ -17,20 +20,20 @@ export const ContactPage = ({ onNavigate }) => {
 
   const faqs = [
     {
-      q: 'How fast is Local Run doorstep delivery?',
-      a: 'Our average delivery time is 20 to 30 minutes. We utilize local fulfillment hubs and live GPS dispatched rider partners.'
+      q: `Does ${brandName} sell directly to consumers?`,
+      a: 'We are a manufacturing and wholesale company. Our products are supplied to supermarket and retail partners. This catalog helps buyers browse our range for B2B supply.'
     },
     {
-      q: 'Are all chicken and beef products strictly Halal certified?',
-      a: 'Yes, 100% of our poultry and meat cuts are certified Halal, humanely raised, free from growth hormones, and processed in hygienic cold facilities.'
+      q: 'How can a supermarket partner request supply?',
+      a: 'Contact our sales team by phone or email with your company details and product interest. We will share wholesale availability, SKUs, and distribution options across Kuwait.'
     },
     {
-      q: 'What happens if an item is out of stock or damaged?',
-      a: 'We offer an instant refund or rider replacement guarantee. You can reach our 24/7 hotline or submit a claim directly in the app.'
+      q: 'Where do you distribute?',
+      a: 'We provide nationwide distribution across Kuwait to supermarket chains and authorized retail partners.'
     },
     {
-      q: 'Is there a minimum order amount for free delivery?',
-      a: 'All orders over ₹499 qualify for free home delivery. Smaller orders incur a low flat fee of ₹30.'
+      q: 'Can I browse the full product catalog online?',
+      a: 'Yes. Use the Product Catalog to explore categories and items we manufacture for supermarket shelves. For wholesale pricing and orders, please contact our B2B team.'
     }
   ];
 
@@ -43,10 +46,10 @@ export const ContactPage = ({ onNavigate }) => {
           Get in Touch
         </span>
         <h1 className="text-3xl sm:text-4xl font-black text-[#1F2229]">
-          Contact Local Run Support
+          Contact {brandName}
         </h1>
         <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto font-medium">
-          Have a question about your order, partner farms, or delivery fleet? We are here 24/7 to help.
+          Wholesale inquiries, supermarket partnerships, and catalog questions — our team is ready to help.
         </p>
       </div>
 
@@ -58,9 +61,10 @@ export const ContactPage = ({ onNavigate }) => {
             <div className="w-10 h-10 rounded-xl bg-orange-50 text-[#FF7622] flex items-center justify-center">
               <MapPin className="w-5 h-5" />
             </div>
-            <h4 className="font-extrabold text-sm text-[#1F2229]">Central Hub</h4>
+            <h4 className="font-extrabold text-sm text-[#1F2229]">Headquarters</h4>
             <p className="text-xs text-slate-500 leading-relaxed">
-              542, Halal Tower, 42nd St, Manhattan, New York, NY 10018
+              Al Faysal Bakery &amp; Sweets Company W.L.L.<br />
+              Kuwait
             </p>
           </div>
 
@@ -68,10 +72,11 @@ export const ContactPage = ({ onNavigate }) => {
             <div className="w-10 h-10 rounded-xl bg-orange-50 text-[#FF7622] flex items-center justify-center">
               <Phone className="w-5 h-5" />
             </div>
-            <h4 className="font-extrabold text-sm text-[#1F2229]">24/7 Phone Support</h4>
+            <h4 className="font-extrabold text-sm text-[#1F2229]">Sales Hotline</h4>
             <p className="text-xs text-slate-500 leading-relaxed">
-              +1 (800) 425-2500 <br />
-              Direct rider dispatch line
+              <a href="tel:+96524739900" className="hover:text-[#FF7622]">+965 24739900</a>
+              <br />
+              B2B &amp; wholesale partners
             </p>
           </div>
 
@@ -81,8 +86,11 @@ export const ContactPage = ({ onNavigate }) => {
             </div>
             <h4 className="font-extrabold text-sm text-[#1F2229]">Email Inquiries</h4>
             <p className="text-xs text-slate-500 leading-relaxed">
-              support@localrun.com <br />
-              halal@marketplace.com
+              <a href="mailto:info@alfaysalgroup.com" className="hover:text-[#FF7622]">
+                info@alfaysalgroup.com
+              </a>
+              <br />
+              Partnership &amp; catalog requests
             </p>
           </div>
 
@@ -90,10 +98,10 @@ export const ContactPage = ({ onNavigate }) => {
             <div className="w-10 h-10 rounded-xl bg-orange-50 text-[#FF7622] flex items-center justify-center">
               <Clock className="w-5 h-5" />
             </div>
-            <h4 className="font-extrabold text-sm text-[#1F2229]">Operating Hours</h4>
+            <h4 className="font-extrabold text-sm text-[#1F2229]">Business Hours</h4>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Monday – Sunday: <br />
-              6:00 AM – 11:30 PM EST
+              Sunday – Thursday<br />
+              8:00 AM – 5:00 PM
             </p>
           </div>
         </div>
@@ -104,8 +112,8 @@ export const ContactPage = ({ onNavigate }) => {
           {/* Contact Form */}
           <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-6 text-left">
             <div>
-              <h3 className="text-xl font-black text-[#1F2229]">Send Us a Message</h3>
-              <p className="text-xs text-slate-500 mt-0.5">We respond within 15 minutes during live hours.</p>
+              <h3 className="text-xl font-black text-[#1F2229]">Send a Wholesale Inquiry</h3>
+              <p className="text-xs text-slate-500 mt-0.5">For supermarket buyers and retail partners.</p>
             </div>
 
             {submitted ? (
@@ -113,7 +121,7 @@ export const ContactPage = ({ onNavigate }) => {
                 <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
                 <h4 className="font-bold text-sm text-emerald-800">Message Received!</h4>
                 <p className="text-xs text-emerald-600">
-                  Thank you for reaching out. Our support specialist will contact you shortly.
+                  Thank you. Our B2B team will contact you shortly.
                 </p>
               </div>
             ) : (
@@ -126,7 +134,7 @@ export const ContactPage = ({ onNavigate }) => {
                       required
                       value={form.name}
                       onChange={(e) => setForm({ ...form, name: e.target.value })}
-                      placeholder="e.g. John Doe"
+                      placeholder="e.g. Ahmed Al-Rashid"
                       className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:border-[#FF7622] focus:bg-white"
                     />
                   </div>
@@ -138,7 +146,7 @@ export const ContactPage = ({ onNavigate }) => {
                       required
                       value={form.email}
                       onChange={(e) => setForm({ ...form, email: e.target.value })}
-                      placeholder="e.g. john@example.com"
+                      placeholder="e.g. buyer@supermarket.com"
                       className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:border-[#FF7622] focus:bg-white"
                     />
                   </div>
@@ -151,7 +159,7 @@ export const ContactPage = ({ onNavigate }) => {
                       type="tel"
                       value={form.phone}
                       onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                      placeholder="+1 (555) 000-0000"
+                      placeholder="+965 ..."
                       className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:border-[#FF7622] focus:bg-white"
                     />
                   </div>
@@ -163,7 +171,7 @@ export const ContactPage = ({ onNavigate }) => {
                       required
                       value={form.subject}
                       onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                      placeholder="Order Inquiry / Quality / Delivery"
+                      placeholder="Wholesale / Catalog / Partnership"
                       className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:border-[#FF7622] focus:bg-white"
                     />
                   </div>
@@ -176,7 +184,7 @@ export const ContactPage = ({ onNavigate }) => {
                     rows="4"
                     value={form.message}
                     onChange={(e) => setForm({ ...form, message: e.target.value })}
-                    placeholder="Tell us how we can help..."
+                    placeholder="Tell us about your supermarket or retail company..."
                     className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:border-[#FF7622] focus:bg-white"
                   ></textarea>
                 </div>
@@ -186,7 +194,7 @@ export const ContactPage = ({ onNavigate }) => {
                   className="w-full py-4 rounded-xl bg-[#FF7622] hover:bg-[#E56314] text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-[#FF7622]/25 transition-all flex items-center justify-center space-x-2"
                 >
                   <Send className="w-4 h-4" />
-                  <span>Send Message</span>
+                  <span>Send Inquiry</span>
                 </button>
               </form>
             )}

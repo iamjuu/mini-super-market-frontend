@@ -4,9 +4,10 @@ import ApiClient from '../api/client';
 const PlatformContext = createContext(null);
 
 const DEFAULT_APPEARANCE = {
-  platformName: 'Al Salhiya',
-  tagline: 'Premium Quality Foods & Products — عالية الجودة',
+  platformName: 'Alfaysal Bakery',
+  tagline: 'Premium baked snacks, crafted with heritage since 1991',
   logoUrl: '/al-salhiya-logo.jpg',
+  heroImageUrl: '',
   primaryThemeColor: '#18308c',
   secondaryThemeColor: '#ff7824',
   accentGold: '#ffba18',

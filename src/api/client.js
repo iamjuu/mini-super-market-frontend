@@ -21,33 +21,58 @@ export const setToken = (token) => {
 export const request = async (endpoint, options = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
   const token = getToken();
+  const method = (options.method || 'GET').toUpperCase();
+  const hasBody = options.body !== undefined && options.body !== null;
 
   const headers = {
-    'Content-Type': 'application/json',
+    ...(hasBody ? { 'Content-Type': 'application/json' } : {}),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    // Prevent stale 304 responses from being treated as failures
+    'Cache-Control': 'no-cache',
+    Pragma: 'no-cache',
     ...options.headers,
   };
 
   const config = {
     ...options,
+    method,
     headers,
+    // Force a fresh network response — avoids empty-body 304 breaking JSON parse
+    cache: 'no-store',
   };
 
   try {
     const response = await fetch(url, config);
-    
+
     let data;
     const contentType = response.headers.get('content-type') || '';
+
     if (contentType.includes('application/json')) {
-      data = await response.json();
+      try {
+        data = await response.json();
+      } catch (_) {
+        data = {
+          message:
+            response.status === 304
+              ? 'Cached response could not be read. Please refresh.'
+              : 'Invalid JSON response from server.',
+        };
+      }
     } else {
       const text = await response.text();
       data = {
-        message: text || (response.status === 500 ? 'Server error occurred on backend.' : 'Unexpected server response.'),
+        message:
+          text ||
+          (response.status === 500
+            ? 'Server error occurred on backend.'
+            : response.status === 304
+              ? 'Not modified (empty cache body).'
+              : 'Unexpected server response.'),
       };
     }
 
-    if (!response.ok) {
+    // 304 is not in the 2xx range, so response.ok is false — treat it carefully
+    if (!response.ok && response.status !== 304) {
       const error = new Error(data.message || `API request failed (${response.status})`);
       error.status = response.status;
       error.code = data.code || 'API_ERROR';
@@ -55,9 +80,17 @@ export const request = async (endpoint, options = {}) => {
       throw error;
     }
 
+    // If we somehow still get a bare 304 with no usable payload, fail clearly
+    if (response.status === 304 && (data == null || data.message)) {
+      const error = new Error(data?.message || 'Products cache returned 304 with no body');
+      error.status = 304;
+      error.code = 'CACHE_STALE';
+      throw error;
+    }
+
     return data;
   } catch (error) {
-    console.error(`[API Error] ${options.method || 'GET'} ${endpoint}:`, error.message);
+    console.error(`[API Error] ${method} ${endpoint}:`, error.message);
     throw error;
   }
 };

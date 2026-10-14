@@ -17,14 +17,18 @@ export default {
   noProductsFoundMatching: 'के लिए कोई उत्पाद नहीं मिला',
 
   // Hero Section
-  heroTag: 'अल सल्हिया • AL SALHIYA — डिजिटल उत्पाद कैटलॉग',
-  heroTitle1: 'हमारे स्टोर में उपलब्ध',
-  heroTitle2: 'सुपरमार्केट कैटलॉग देखें',
-  heroDesc: 'अल सल्हिया सुपरमार्केट में आपका स्वागत है। ताज़ा उपज, हलाल मीट, समुद्री भोजन, दैनिक किराने का सामान और उच्च गुणवत्ता वाले ब्रांड देखें।',
-  browseCategories: 'श्रेणियां देखें',
-  fullCatalogList: 'पूरी कैटलॉग सूची',
-  physicalStock: 'स्टोर में भौतिक स्टॉक उपलब्ध',
-  verifiedQuality: 'सत्यापित गुणवत्ता वाले उत्पाद',
+  heroTag: 'स्था. 1991 · कुवैत',
+  heroTitle1: 'घर का स्वाद',
+  heroTitle2: '',
+  heroDesc: 'परंपरा के साथ बने प्रीमियम बेक्ड स्नैक्स। पूरे कुवैत में ताज़ा डिलीवरी।',
+  browseCategories: 'उत्पाद देखें',
+  fullCatalogList: 'हमारी कहानी',
+  physicalStock: 'राष्ट्रीय वितरण',
+  verifiedQuality: '1991 से विरासत',
+  exploreRange: 'हमारी रेंज देखें',
+  whatWeBake: 'हम क्या बेक करते हैं',
+  whatWeBakeDesc: 'हमारे सिग्नेचर बेक्ड स्नैक्स खोजें — प्यार और परंपरा के साथ।',
+  viewRange: 'उत्पाद देखें',
 
   // Categories & Step 1
   step1Tag: 'चरण 1: एक श्रेणी चुनें',

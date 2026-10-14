@@ -30,6 +30,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Alert, AlertTitle, AlertDescription } from '../ui/alert';
 import ApiClient from '../../api/client';
 import { LANGUAGES, getTranslation, setAppLanguage, getAppLanguage } from '../../locales';
+import { Footer } from './Footer';
 
 export const UserLayout = ({ currentRoute = 'home', onRouteChange, onRefresh, children }) => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -38,11 +39,50 @@ export const UserLayout = ({ currentRoute = 'home', onRouteChange, onRefresh, ch
   const [searchQuery, setSearchQuery] = useState('');
   const [liveCatalog, setLiveCatalog] = useState([]);
   const [clickedNav, setClickedNav] = useState(null);
+  const [bottomNavVisible, setBottomNavVisible] = useState(true);
+  const lastScrollYRef = useRef(0);
 
   // Language state (English, Arabic, Hindi)
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [selectedLang, setSelectedLang] = useState(getAppLanguage);
   const langDropdownRef = useRef(null);
+
+  // Hide bottom nav on scroll down, show on scroll up
+  useEffect(() => {
+    lastScrollYRef.current = window.scrollY || 0;
+    let ticking = false;
+
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(() => {
+        const currentY = window.scrollY || 0;
+        const lastY = lastScrollYRef.current;
+        const delta = currentY - lastY;
+
+        if (currentY < 24) {
+          setBottomNavVisible(true);
+        } else if (delta > 8) {
+          // scrolling down
+          setBottomNavVisible(false);
+        } else if (delta < -8) {
+          // scrolling up
+          setBottomNavVisible(true);
+        }
+
+        lastScrollYRef.current = currentY;
+        ticking = false;
+      });
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Always show bottom nav when route changes
+  useEffect(() => {
+    setBottomNavVisible(true);
+  }, [currentRoute]);
 
   useEffect(() => {
     const handleLangSync = (e) => {
@@ -178,65 +218,48 @@ export const UserLayout = ({ currentRoute = 'home', onRouteChange, onRefresh, ch
       <header className={`sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-2xs px-4 md:px-8 py-3.5 ${
         (currentRoute === 'home' || currentRoute === 'dashboard') ? 'hidden md:block' : 'block'
       }`}>
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 md:gap-8">
-          
-          {/* Brand Logo & Name */}
-          <div 
-            onClick={() => onRouteChange?.('home')} 
-            className="flex items-center space-x-2.5 sm:space-x-3 cursor-pointer group shrink-0"
-          >
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white border border-slate-200/80 p-0.5 shadow-sm group-hover:scale-105 transition-transform overflow-hidden flex items-center justify-center">
-              <img src="/al-salhiya-logo.jpg" alt="Al Salhiya Logo" className="w-full h-full object-contain" />
-            </div>
-            <div className="leading-tight text-left">
-              <div className="flex items-center space-x-1 sm:space-x-1.5">
-                <span className="text-lg sm:text-xl font-black text-[#18308c] tracking-tight">
-                  Al Salhiya
-                </span>
-                <span className="text-xs sm:text-sm font-black text-[#ff7824]">الصالحية</span>
-              </div>
-              <span className="text-[9px] sm:text-[10px] text-amber-600 font-bold tracking-widest block uppercase">SUPERMARKET CATALOG</span>
-            </div>
-          </div>
-
-          {/* Center: Nav Links OR Search Bar */}
+        <div className="max-w-7xl mx-auto">
+          {/* Full-width search mode — prevents logo/icons from crushing the layout */}
           {showSearchOverlay ? (
-            <div className="flex-1 max-w-xl mx-2 sm:mx-8 relative animate-in fade-in zoom-in-95 duration-200">
-              <div className="flex items-center bg-[#F4F6F8] rounded-2xl px-3 sm:px-4 py-2 border border-[#FF7622] shadow-sm focus-within:bg-white transition-all">
-                <Search className="w-4 h-4 text-[#FF7622] shrink-0 mr-2 sm:mr-3" />
-                <input
-                  type="text"
-                  autoFocus
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={navT.searchPlaceholder}
-                  className="w-full text-xs font-semibold text-[#181C2E] bg-transparent placeholder:text-slate-400 focus:outline-none"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="text-slate-400 hover:text-slate-600 mr-2 text-xs"
-                  >
-                    ✕
-                  </button>
-                )}
+            <div className="relative w-full animate-in fade-in slide-in-from-top-1 duration-200">
+              <div className="flex items-center gap-2">
+                <div className="flex-1 flex items-center bg-[#F4F6F8] rounded-2xl px-3 sm:px-4 py-2.5 border border-[#FF7622] shadow-sm focus-within:bg-white transition-all min-w-0">
+                  <Search className="w-4 h-4 text-[#FF7622] shrink-0 mr-2" />
+                  <input
+                    type="text"
+                    autoFocus
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={navT.searchPlaceholderMobile || navT.searchPlaceholder}
+                    className="w-full min-w-0 text-xs font-semibold text-[#181C2E] bg-transparent placeholder:text-slate-400 focus:outline-none"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="text-slate-400 hover:text-slate-600 px-1 text-xs shrink-0"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
                 <button
+                  type="button"
                   onClick={() => {
                     setShowSearchOverlay(false);
                     setSearchQuery('');
                   }}
-                  className="p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors"
+                  className="shrink-0 h-10 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors"
                   title="Close Search"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              {/* Autocomplete Results */}
               {searchQuery.trim() !== '' && (
                 <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 p-3 z-50 max-h-80 overflow-y-auto space-y-1.5 animate-in slide-in-from-top-2 duration-150">
                   <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 py-1">
-                    Catalog Results ({filteredItems.length})
+                    {navT.catalogResults} ({filteredItems.length})
                   </div>
                   {filteredItems.length > 0 ? (
                     filteredItems.map((item) => (
@@ -247,131 +270,147 @@ export const UserLayout = ({ currentRoute = 'home', onRouteChange, onRefresh, ch
                           setSearchQuery('');
                           onRouteChange?.(`product/${item.id}`);
                         }}
-                        className="p-2.5 rounded-xl hover:bg-orange-50 flex items-center justify-between cursor-pointer transition-colors"
+                        className="p-2.5 rounded-xl hover:bg-orange-50 flex items-center justify-between gap-2 cursor-pointer transition-colors"
                       >
-                        <div className="flex items-center space-x-2.5">
-                          <span className="px-2 py-0.5 rounded-md bg-orange-100 text-[#FF7622] text-[10px] font-black">
+                        <div className="flex items-center space-x-2 min-w-0">
+                          <span className="px-2 py-0.5 rounded-md bg-orange-100 text-[#FF7622] text-[10px] font-black shrink-0">
                             {item.category}
                           </span>
-                          <span className="text-xs font-bold text-[#181C2E]">{item.name}</span>
-                          {item.brand && (
-                            <span className="text-[10px] text-slate-400 font-medium">({item.brand})</span>
-                          )}
+                          <span className="text-xs font-bold text-[#181C2E] truncate">{item.name}</span>
                         </div>
-                        <span className="text-xs font-black text-[#FF7622]">{item.price}</span>
+                        <span className="text-xs font-black text-[#FF7622] shrink-0">{item.price}</span>
                       </div>
                     ))
                   ) : (
                     <div className="py-4 text-center text-xs text-slate-400">
-                      No products found matching "{searchQuery}"
+                      {navT.noProductsFoundMatching} "{searchQuery}"
                     </div>
                   )}
                 </div>
               )}
             </div>
           ) : (
-            <nav className="hidden md:flex items-center space-x-6 lg:space-x-8 text-xs font-bold text-[#1F2229]">
-              <button 
-                onClick={() => onRouteChange?.('home')}
-                className={`transition-colors flex items-center space-x-1 ${
-                  currentRoute === 'home' || currentRoute === 'dashboard'
-                    ? 'text-[#FF7622] font-black'
-                    : 'hover:text-[#FF7622]'
-                }`}
+            <div className="flex items-center justify-between gap-3 md:gap-8">
+              {/* Brand Logo & Name */}
+              <div 
+                onClick={() => onRouteChange?.('home')} 
+                className="flex items-center space-x-2.5 sm:space-x-3 cursor-pointer group shrink-0 min-w-0"
               >
-                <span>{navT.home}</span>
-              </button>
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white border border-slate-200/80 p-0.5 shadow-sm group-hover:scale-105 transition-transform overflow-hidden flex items-center justify-center shrink-0">
+                  <img src="/al-salhiya-logo.jpg" alt="Al Salhiya Logo" className="w-full h-full object-contain" />
+                </div>
+                <div className="leading-tight text-left min-w-0">
+                  <div className="flex items-center space-x-1 sm:space-x-1.5">
+                    <span className="text-lg sm:text-xl font-black text-[#18308c] tracking-tight truncate">
+                      Al Salhiya
+                    </span>
+                    <span className="text-xs sm:text-sm font-black text-[#ff7824] shrink-0">الصالحية</span>
+                  </div>
+                  <span className="text-[9px] sm:text-[10px] text-amber-600 font-bold tracking-widest block uppercase truncate">SUPERMARKET CATALOG</span>
+                </div>
+              </div>
 
-              <button 
-                onClick={() => onRouteChange?.('shop')}
-                className={`transition-colors flex items-center space-x-1 ${
-                  currentRoute === 'shop'
-                    ? 'text-[#FF7622] font-black'
-                    : 'hover:text-[#FF7622]'
-                }`}
-              >
-                <span>{navT.productCatalog}</span>
-              </button>
+              {/* Desktop Nav Links */}
+              <nav className="hidden md:flex items-center space-x-6 lg:space-x-8 text-xs font-bold text-[#1F2229]">
+                <button 
+                  onClick={() => onRouteChange?.('home')}
+                  className={`transition-colors flex items-center space-x-1 ${
+                    currentRoute === 'home' || currentRoute === 'dashboard'
+                      ? 'text-[#FF7622] font-black'
+                      : 'hover:text-[#FF7622]'
+                  }`}
+                >
+                  <span>{navT.home}</span>
+                </button>
 
-              <button 
-                onClick={() => onRouteChange?.('about')}
-                className={`transition-colors flex items-center space-x-1 ${
-                  currentRoute === 'about'
-                    ? 'text-[#FF7622] font-black'
-                    : 'hover:text-[#FF7622]'
-                }`}
-              >
-                <span>{navT.about}</span>
-              </button>
+                <button 
+                  onClick={() => onRouteChange?.('shop')}
+                  className={`transition-colors flex items-center space-x-1 ${
+                    currentRoute === 'shop'
+                      ? 'text-[#FF7622] font-black'
+                      : 'hover:text-[#FF7622]'
+                  }`}
+                >
+                  <span>{navT.productCatalog}</span>
+                </button>
 
-              <button 
-                onClick={() => onRouteChange?.('contact')}
-                className={`transition-colors flex items-center space-x-1 ${
-                  currentRoute === 'contact'
-                    ? 'text-[#FF7622] font-black'
-                    : 'hover:text-[#FF7622]'
-                }`}
-              >
-                <span>{navT.contact}</span>
-              </button>
-            </nav>
+                <button 
+                  onClick={() => onRouteChange?.('about')}
+                  className={`transition-colors flex items-center space-x-1 ${
+                    currentRoute === 'about'
+                      ? 'text-[#FF7622] font-black'
+                      : 'hover:text-[#FF7622]'
+                  }`}
+                >
+                  <span>{navT.about}</span>
+                </button>
+
+                <button 
+                  onClick={() => onRouteChange?.('contact')}
+                  className={`transition-colors flex items-center space-x-1 ${
+                    currentRoute === 'contact'
+                      ? 'text-[#FF7622] font-black'
+                      : 'hover:text-[#FF7622]'
+                  }`}
+                >
+                  <span>{navT.contact}</span>
+                </button>
+              </nav>
+
+              {/* Right Action Buttons */}
+              <div className="flex items-center space-x-1.5 sm:space-x-3 shrink-0">
+                <button 
+                  onClick={() => onRouteChange?.('shop')}
+                  className={`px-2.5 sm:px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center space-x-1.5 sm:space-x-2 border shadow-xs active:scale-95 ${
+                    currentRoute === 'shop'
+                      ? 'bg-[#FF7622] text-white border-[#FF7622]'
+                      : 'bg-white hover:bg-orange-50 text-slate-800 border-slate-200/90 hover:border-[#FF7622]/40'
+                  }`}
+                  title="Explore Catalog"
+                >
+                  <Grid className={`w-4 h-4 ${currentRoute === 'shop' ? 'text-white' : 'text-[#FF7622]'}`} />
+                  <span className="hidden sm:inline">{navT.browseCatalog}</span>
+                </button>
+
+                <button 
+                  onClick={() => {
+                    setShowMobileMenu(false);
+                    setShowSearchOverlay(true);
+                  }}
+                  className="p-2 text-slate-600 hover:text-[#FF7622] transition-colors" 
+                  title="Search Products"
+                >
+                  <Search className="w-4 h-4" />
+                </button>
+
+                <button 
+                  onClick={() => onRouteChange?.('contact')}
+                  className={`p-2 transition-colors relative ${
+                    currentRoute === 'contact' ? 'text-[#FF7622]' : 'text-slate-600 hover:text-[#FF7622]'
+                  }`}
+                  title="Contact Us & Store Location"
+                >
+                  <Phone className="w-4 h-4" />
+                </button>
+
+                <button
+                  onClick={() => setShowMobileMenu(prev => !prev)}
+                  className="p-2 text-slate-700 hover:text-[#FF7622] md:hidden rounded-lg hover:bg-slate-100 transition-colors"
+                  title="Toggle Navigation Menu"
+                >
+                  {showMobileMenu ? (
+                    <X className="w-5 h-5 text-[#FF7622]" />
+                  ) : (
+                    <MenuIcon className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+            </div>
           )}
-
-          {/* Right Action Buttons */}
-          <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
-            {/* Catalog Button */}
-            <button 
-              onClick={() => onRouteChange?.('shop')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center space-x-1.5 sm:space-x-2 border shadow-xs active:scale-95 ${
-                currentRoute === 'shop'
-                  ? 'bg-[#FF7622] text-white border-[#FF7622]'
-                  : 'bg-white hover:bg-orange-50 text-slate-800 border-slate-200/90 hover:border-[#FF7622]/40'
-              }`}
-              title="Explore Catalog"
-            >
-              <Grid className={`w-4 h-4 ${currentRoute === 'shop' ? 'text-white' : 'text-[#FF7622]'}`} />
-              <span className="hidden sm:inline">{navT.browseCatalog}</span>
-            </button>
-
-            {/* Search Icon */}
-            {!showSearchOverlay && (
-              <button 
-                onClick={() => setShowSearchOverlay(true)}
-                className="p-2 text-slate-600 hover:text-[#FF7622] transition-colors" 
-                title="Search Products"
-              >
-                <Search className="w-4 h-4" />
-              </button>
-            )}
-
-            {/* Contact Button */}
-            <button 
-              onClick={() => onRouteChange?.('contact')}
-              className={`p-2 transition-colors relative ${
-                currentRoute === 'contact' ? 'text-[#FF7622]' : 'text-slate-600 hover:text-[#FF7622]'
-              }`}
-              title="Contact Us & Store Location"
-            >
-              <Phone className="w-4 h-4" />
-            </button>
-
-            {/* Mobile Responsive Hamburger Menu Toggle */}
-            <button
-              onClick={() => setShowMobileMenu(prev => !prev)}
-              className="p-2 text-slate-700 hover:text-[#FF7622] md:hidden rounded-lg hover:bg-slate-100 transition-colors"
-              title="Toggle Navigation Menu"
-            >
-              {showMobileMenu ? (
-                <X className="w-5 h-5 text-[#FF7622]" />
-              ) : (
-                <MenuIcon className="w-5 h-5" />
-              )}
-            </button>
-          </div>
         </div>
 
         {/* Mobile Responsive Navigation Dropdown */}
-        {showMobileMenu && (
+        {!showSearchOverlay && showMobileMenu && (
           <div className="md:hidden pt-3 pb-2 border-t border-slate-100 mt-3 animate-in slide-in-from-top-2 duration-150">
             <nav className="flex flex-col space-y-1">
               {[
@@ -446,11 +485,18 @@ export const UserLayout = ({ currentRoute = 'home', onRouteChange, onRefresh, ch
         {children}
       </main>
 
+      {/* Shared footer on every storefront page */}
+      <Footer onNavigate={onRouteChange} />
+
       {/* =============================================================
           4. 4-TAB BOTTOM NAVIGATION BAR (Mobile Only: md:hidden)
           Clean 4 tabs: Home, Shop, About, Connect (Icon-only with click animation)
          ============================================================= */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white/95 backdrop-blur-lg border-t border-slate-200/80 px-2 py-2 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+      <nav
+        className={`fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white/95 backdrop-blur-lg border-t border-slate-200/80 px-2 py-2 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] transition-transform duration-300 ease-out will-change-transform ${
+          bottomNavVisible ? 'translate-y-0' : 'translate-y-full'
+        }`}
+      >
         <div className="max-w-md mx-auto grid grid-cols-4 items-center">
           {[
             { id: 'home', label: navT.home, icon: Home, isActive: currentRoute === 'home' || currentRoute === 'dashboard' },

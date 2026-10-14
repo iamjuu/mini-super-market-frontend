@@ -234,7 +234,7 @@ export const ShopCatalogPage = ({ onNavigate }) => {
               Al Salhiya Product Catalog
             </h1>
             <p className="text-xs text-slate-500 font-medium mt-0.5">
-              Explore in-store supermarket products, categories &amp; brands
+              Browse our wholesale product catalog for supermarket partners
             </p>
           </div>
 

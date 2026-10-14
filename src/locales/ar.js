@@ -17,14 +17,18 @@ export default {
   noProductsFoundMatching: 'لم يتم العثور على منتجات مطابقة لـ',
 
   // Hero Section
-  heroTag: 'الصالحية • AL SALHIYA — الدليل الرقمي للمنتجات',
-  heroTitle1: 'استكشف دليل',
-  heroTitle2: 'سوبرماركت الصالحية في المتجر',
-  heroDesc: 'مرحباً بكم في سوبرماركت الصالحية. تصفحوا مجموعتنا الكاملة من المنتجات الطازجة، اللحوم الحلال، المأكولات البحرية، والمؤن اليومية.',
-  browseCategories: 'تصفح الأقسام',
-  fullCatalogList: 'دليل المنتجات الكامل',
-  physicalStock: 'متوفر فعلياً في المتجر',
-  verifiedQuality: 'منتجات عالية الجودة معتمدة',
+  heroTag: 'تأسست 1991 · الكويت',
+  heroTitle1: 'طعم البيت',
+  heroTitle2: '',
+  heroDesc: 'وجبات خفيفة مخبوزة فاخرة مصنوعة بتقاليد أصيلة. تُوصل طازجة في جميع أنحاء الكويت.',
+  browseCategories: 'استكشف المنتجات',
+  fullCatalogList: 'قصتنا',
+  physicalStock: 'توزيع على مستوى الكويت',
+  verifiedQuality: 'تراث منذ 1991',
+  exploreRange: 'استكشف مجموعتنا',
+  whatWeBake: 'ما نخبزه',
+  whatWeBakeDesc: 'اكتشف وجباتنا الخفيفة المميزة — مصنوعة بحب وتقاليد أصيلة.',
+  viewRange: 'عرض المنتجات',
 
   // Categories & Step 1
   step1Tag: 'الخطوة 1: اختر القسم',
