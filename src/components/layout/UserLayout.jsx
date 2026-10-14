@@ -37,6 +37,7 @@ export const UserLayout = ({ currentRoute = 'home', onRouteChange, onRefresh, ch
   const [showSearchOverlay, setShowSearchOverlay] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [liveCatalog, setLiveCatalog] = useState([]);
+  const [clickedNav, setClickedNav] = useState(null);
 
   // Language state (English, Arabic, Hindi)
   const [isLangOpen, setIsLangOpen] = useState(false);
@@ -446,72 +447,62 @@ export const UserLayout = ({ currentRoute = 'home', onRouteChange, onRefresh, ch
       </main>
 
       {/* =============================================================
-          4. 5-SLOT FLOATING BOTTOM NAVIGATION BAR (Mobile Only: md:hidden)
-          Mockup 5-slot design with center elevated action button.
-          Catalog replacement for chat/orders:
-          1. Home (Store/Home)
-          2. Categories (Grid)
-          3. Center Elevated Action (Quick Deals / Offers)
-          4. Brands (Layers/Tags)
-      {/* =============================================================
           4. 4-TAB BOTTOM NAVIGATION BAR (Mobile Only: md:hidden)
-          Clean 4 tabs: Home, Shop, About, Connect
+          Clean 4 tabs: Home, Shop, About, Connect (Icon-only with click animation)
          ============================================================= */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white/95 backdrop-blur-lg border-t border-slate-200/80 px-2 py-2 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
         <div className="max-w-md mx-auto grid grid-cols-4 items-center">
-          
-          {/* 1. Home */}
-          <button
-            onClick={() => onRouteChange?.('home')}
-            className={`flex flex-col items-center justify-center py-1 transition-colors cursor-pointer ${
-              currentRoute === 'home' || currentRoute === 'dashboard'
-                ? 'text-[#FF7622]'
-                : 'text-slate-400 hover:text-slate-600'
-            }`}
-          >
-            <Home className="w-5 h-5 mb-0.5" />
-            <span className="text-[10px] font-bold">{navT.home}</span>
-          </button>
+          {[
+            { id: 'home', label: navT.home, icon: Home, isActive: currentRoute === 'home' || currentRoute === 'dashboard' },
+            { id: 'shop', label: navT.productCatalog, icon: Store, isActive: currentRoute === 'shop' },
+            { id: 'about', label: navT.about, icon: Info, isActive: currentRoute === 'about' },
+            { id: 'contact', label: navT.contact, icon: Phone, isActive: currentRoute === 'contact' }
+          ].map((item) => {
+            const Icon = item.icon;
+            const isClicked = clickedNav === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setClickedNav(item.id);
+                  onRouteChange?.(item.id);
+                  setTimeout(() => setClickedNav(null), 450);
+                }}
+                aria-label={item.label}
+                title={item.label}
+                className="group relative flex flex-col items-center justify-center py-1 transition-transform active:scale-75 duration-150 cursor-pointer select-none"
+              >
+                {/* Ripple burst on click */}
+                {isClicked && (
+                  <span className="absolute w-12 h-12 rounded-full bg-[#FF7622]/20 animate-nav-ripple pointer-events-none" />
+                )}
 
-          {/* 2. Shop */}
-          <button
-            onClick={() => onRouteChange?.('shop')}
-            className={`flex flex-col items-center justify-center py-1 transition-colors cursor-pointer ${
-              currentRoute === 'shop'
-                ? 'text-[#FF7622]'
-                : 'text-slate-400 hover:text-slate-600'
-            }`}
-          >
-            <Store className="w-5 h-5 mb-0.5" />
-            <span className="text-[10px] font-bold">{navT.productCatalog}</span>
-          </button>
+                {/* Icon wrapper with animated spring bounce & active styling */}
+                <div
+                  className={`relative p-2.5 rounded-2xl transition-all duration-300 ${
+                    item.isActive
+                      ? 'bg-orange-50 text-[#FF7622] shadow-xs ring-1 ring-orange-200/50'
+                      : 'text-slate-400 group-hover:text-slate-600 group-hover:bg-slate-50'
+                  } ${isClicked ? 'animate-nav-bounce' : ''}`}
+                >
+                  <Icon
+                    className={`w-5 h-5 transition-transform duration-300 ${
+                      item.isActive ? 'scale-110 stroke-[2.4]' : 'stroke-[1.8]'
+                    }`}
+                  />
+                </div>
 
-          {/* 3. About */}
-          <button
-            onClick={() => onRouteChange?.('about')}
-            className={`flex flex-col items-center justify-center py-1 transition-colors cursor-pointer ${
-              currentRoute === 'about'
-                ? 'text-[#FF7622]'
-                : 'text-slate-400 hover:text-slate-600'
-            }`}
-          >
-            <Info className="w-5 h-5 mb-0.5" />
-            <span className="text-[10px] font-bold">{navT.about}</span>
-          </button>
-
-          {/* 4. Connect */}
-          <button
-            onClick={() => onRouteChange?.('contact')}
-            className={`flex flex-col items-center justify-center py-1 transition-colors cursor-pointer ${
-              currentRoute === 'contact'
-                ? 'text-[#FF7622]'
-                : 'text-slate-400 hover:text-slate-600'
-            }`}
-          >
-            <Phone className="w-5 h-5 mb-0.5" />
-            <span className="text-[10px] font-bold">{navT.contact}</span>
-          </button>
-
+                {/* Active Indicator Dot */}
+                <span
+                  className={`mt-1 w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                    item.isActive
+                      ? 'bg-[#FF7622] scale-100 opacity-100'
+                      : 'bg-transparent scale-0 opacity-0'
+                  }`}
+                />
+              </button>
+            );
+          })}
         </div>
       </nav>
 

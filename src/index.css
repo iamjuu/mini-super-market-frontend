@@ -126,3 +126,38 @@ body {
 .animate-products-in {
   animation: products-fade-slide-up 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* Bottom Navigation Click & Pop Animations */
+@keyframes nav-click-bounce {
+  0% {
+    transform: scale(0.8);
+  }
+  40% {
+    transform: scale(1.25);
+  }
+  70% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes nav-ripple {
+  0% {
+    transform: scale(0.4);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+.animate-nav-bounce {
+  animation: nav-click-bounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-nav-ripple {
+  animation: nav-ripple 0.45s ease-out forwards;
+}
