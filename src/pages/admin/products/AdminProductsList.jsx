@@ -125,8 +125,8 @@ export const AdminProductsList = ({ onNavigate }) => {
 
   // Pagination State (Products)
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [pagination, setPagination] = useState({ total: 0, pages: 1, limit: 10 });
+  const [pageSize, setPageSize] = useState(7);
+  const [pagination, setPagination] = useState({ total: 0, pages: 1, limit: 7 });
 
   // 1. Fetch Products
   const fetchProducts = async (page = currentPage) => {
@@ -1447,7 +1447,7 @@ export const AdminProductsList = ({ onNavigate }) => {
         </div>
       ) : (
         /* Grid View */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {products.map((prod) => {
             const catName = prod.categoryId?.name || prod.categoryName || 'Category';
             const subcatName = prod.subcategoryId?.name || prod.subcategoryName || 'Subcategory';

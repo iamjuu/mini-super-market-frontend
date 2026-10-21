@@ -33,7 +33,7 @@ export const UnitsList = ({ embedded = false, externalAddTrigger = 0, onUnitUpda
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 8;
+  const pageSize = 7;
 
   // Form State
   const [formData, setFormData] = useState({

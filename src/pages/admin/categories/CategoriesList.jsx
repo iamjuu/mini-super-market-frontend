@@ -103,9 +103,9 @@ export const CategoriesList = ({ defaultTab = 'categories' }) => {
 
   // Pagination State (Categories & Subcategories)
   const [categoriesPage, setCategoriesPage] = useState(1);
-  const categoriesPageSize = 8;
+  const categoriesPageSize = 7;
   const [subcategoriesPage, setSubcategoriesPage] = useState(1);
-  const subcategoriesPageSize = 8;
+  const subcategoriesPageSize = 7;
 
   // All Subcategories across all categories (for Subcategories Master tab)
   const [allSubcategories, setAllSubcategories] = useState([]);

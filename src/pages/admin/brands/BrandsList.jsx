@@ -96,7 +96,7 @@ export const BrandsList = () => {
 
   // Pagination State (Brands)
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 8;
+  const pageSize = 7;
 
   // Modals & Target States
   const [selectedBrand, setSelectedBrand] = useState(null);
