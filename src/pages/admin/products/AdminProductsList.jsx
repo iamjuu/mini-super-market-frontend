@@ -227,29 +227,71 @@ export const AdminProductsList = ({ onNavigate }) => {
     const file = e.target.files?.[0];
     if (file) {
       setUploadingSlot(slotIndex);
+
+      // 1. Instant 0ms Preview via FileReader so the image shows immediately
+      const reader = new FileReader();
+      reader.onload = (uploadEvent) => {
+        if (uploadEvent.target?.result) {
+          const previewData = uploadEvent.target.result;
+          setFormData((prev) => {
+            const next = [...(prev.images || ['', '', ''])];
+            next[slotIndex] = previewData;
+            return {
+              ...prev,
+              images: next,
+              image: next[0] || previewData,
+            };
+          });
+        }
+      };
+      reader.readAsDataURL(file);
+
       try {
+        // 2. Compress image client-side (max 1200px, quality 0.82)
         const compressedBase64 = await compressImage(file, {
           maxWidth: 1200,
           maxHeight: 1200,
           quality: 0.82,
         });
 
-        const res = await ApiClient.post('/upload', {
-          image: compressedBase64,
-          folder: 'shamil_marketplace/products',
+        // Set compressed image in state
+        setFormData((prev) => {
+          const next = [...(prev.images || ['', '', ''])];
+          next[slotIndex] = compressedBase64;
+          return {
+            ...prev,
+            images: next,
+            image: next[0] || compressedBase64,
+          };
         });
-        const uploadedUrl = res?.data?.url || compressedBase64;
-        const next = [...(formData.images || ['', '', ''])];
-        next[slotIndex] = uploadedUrl;
-        setFormData((prev) => ({
-          ...prev,
-          images: next,
-          image: next[0] || uploadedUrl,
-        }));
+
+        // 3. Try to upload to Cloudinary (optional remote storage)
+        try {
+          const res = await ApiClient.post('/upload', {
+            image: compressedBase64,
+            folder: 'shamil_marketplace/products',
+          });
+          if (res?.data?.url) {
+            setFormData((prev) => {
+              const next = [...(prev.images || ['', '', ''])];
+              next[slotIndex] = res.data.url;
+              return {
+                ...prev,
+                images: next,
+                image: next[0] || res.data.url,
+              };
+            });
+          }
+        } catch (uploadApiErr) {
+          console.warn('Cloudinary upload endpoint unavailable, keeping local compressed image:', uploadApiErr.message);
+        }
       } catch (err) {
-        console.error('Failed to compress/upload product image:', err);
+        console.error('Failed to compress product image:', err);
       } finally {
         setUploadingSlot(null);
+        if (e.target) {
+          e.target.value = '';
+        }
       }
     }
   };
@@ -791,22 +833,71 @@ export const AdminProductsList = ({ onNavigate }) => {
                         </div>
 
                         {/* Thumbnail Preview */}
-                        <div className="w-full aspect-[4/3] rounded-xl overflow-hidden bg-white border border-gray-200 flex items-center justify-center mb-2.5 relative group">
+                        <div className="w-full aspect-[4/3] rounded-xl overflow-hidden bg-slate-900 border border-gray-200 flex items-center justify-center mb-2.5 relative group">
                           {imgUrl ? (
-                            <img
-                              src={imgUrl}
-                              alt={`Slot ${idx + 1}`}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                e.currentTarget.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&auto=format&fit=crop&q=80';
-                              }}
-                            />
+                            <>
+                              <img
+                                src={imgUrl}
+                                alt={`Slot ${idx + 1}`}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.onerror = null;
+                                  e.currentTarget.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&auto=format&fit=crop&q=80';
+                                }}
+                              />
+
+                              {/* Hover Overlay with Change / Remove actions */}
+                              {uploadingSlot !== idx && (
+                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-2">
+                                  <label className="px-2.5 py-1 rounded-lg bg-white text-[#6030ea] text-[10px] font-bold cursor-pointer flex items-center gap-1 shadow-sm hover:scale-105 transition-transform">
+                                    <Upload className="w-3 h-3" />
+                                    <span>Change</span>
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      disabled={uploadingSlot === idx}
+                                      onChange={(e) => handleProductImageUpload(idx, e)}
+                                      className="hidden"
+                                    />
+                                  </label>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const next = [...(formData.images || ['', '', ''])];
+                                      next[idx] = '';
+                                      setFormData({ ...formData, images: next, image: next[0] || '' });
+                                    }}
+                                    className="px-2.5 py-1 rounded-lg bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-bold flex items-center gap-1 shadow-sm hover:scale-105 transition-transform"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                    <span>Remove</span>
+                                  </button>
+                                </div>
+                              )}
+
+                              {/* Bottom Status Badge */}
+                              {uploadingSlot !== idx && (
+                                <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-xs text-[9px] font-bold text-emerald-400 flex items-center gap-1 shadow-2xs">
+                                  <CheckCircle2 className="w-2.5 h-2.5 text-emerald-400" />
+                                  <span>Ready</span>
+                                </div>
+                              )}
+                            </>
                           ) : (
-                            <div className="text-center p-2 text-gray-400">
-                              <Package className="w-6 h-6 mx-auto mb-1 opacity-40" />
+                            <div className="text-center p-2 text-gray-400 bg-gray-50 w-full h-full flex flex-col items-center justify-center">
+                              <Package className="w-6 h-6 mx-auto mb-1 opacity-40 text-[#6030ea]" />
                               <span className="text-[10px] font-medium block">
                                 {isRequired ? 'Required Image Slot' : 'Optional Angle 3'}
                               </span>
+                              <span className="text-[9px] text-gray-400 mt-0.5">Upload or paste URL</span>
+                            </div>
+                          )}
+
+                          {/* Uploading Spinner Overlay */}
+                          {uploadingSlot === idx && (
+                            <div className="absolute inset-0 bg-black/75 backdrop-blur-xs flex flex-col items-center justify-center text-white p-2 text-center">
+                              <Loader2 className="w-5 h-5 animate-spin text-[#6030ea] mb-1" />
+                              <span className="text-[10px] font-bold">Uploading & Optimizing...</span>
                             </div>
                           )}
                         </div>
@@ -837,7 +928,7 @@ export const AdminProductsList = ({ onNavigate }) => {
                             ) : (
                               <>
                                 <Upload className="w-3 h-3 text-[#6030ea]" />
-                                <span>Upload File</span>
+                                <span>{imgUrl ? 'Change File' : 'Upload File'}</span>
                               </>
                             )}
                             <input
@@ -887,7 +978,7 @@ export const AdminProductsList = ({ onNavigate }) => {
 
               {/* In-Store Price & MRP */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
+                <div className=''>
                   <label className="block text-xs font-bold text-gray-700 mb-1.5 flex items-center justify-between">
                     <span>In-Store Price (₹) <span className="text-rose-500">*</span></span>
                     <span className="text-[11px] text-gray-400 font-normal">Supermarket shelf price</span>

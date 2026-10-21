@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Layers,
   Plus,
@@ -303,6 +303,7 @@ export const CategoriesList = ({ defaultTab = 'categories' }) => {
     setSelectedCategory(null);
     setSubcategories([]);
     setActiveSubcategoryForm(null);
+    setImageLoadError(false);
     setFormData({
       name: '',
       description: '',
@@ -318,6 +319,7 @@ export const CategoriesList = ({ defaultTab = 'categories' }) => {
   // Switch to Full Page EDIT Mode
   const handleOpenEditPage = (cat) => {
     setSelectedCategory(cat);
+    setImageLoadError(false);
     setFormData({
       name: cat.name,
       description: cat.description || '',
@@ -383,33 +385,66 @@ export const CategoriesList = ({ defaultTab = 'categories' }) => {
   };
 
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [imageLoadError, setImageLoadError] = useState(false);
+  const fileInputRef = useRef(null);
 
   const handleCategoryImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if (file) {
+      setImageLoadError(false);
       setIsUploadingImage(true);
+
+      // 1. Immediately create local preview so user sees the image in 0ms
+      const reader = new FileReader();
+      reader.onload = (uploadEvent) => {
+        if (uploadEvent.target?.result) {
+          setFormData((prev) => ({ ...prev, image: uploadEvent.target.result }));
+        }
+      };
+      reader.readAsDataURL(file);
+
       try {
-        // Compress image client-side (max 1000px, quality 0.82)
+        // 2. Compress image client-side (max 1000px, quality 0.82)
         const compressedBase64 = await compressImage(file, {
           maxWidth: 1000,
           maxHeight: 1000,
           quality: 0.82,
         });
 
-        const res = await ApiClient.post('/upload', {
-          image: compressedBase64,
-          folder: 'shamil_marketplace/categories',
-        });
-        if (res?.data?.url) {
-          setFormData((prev) => ({ ...prev, image: res.data.url }));
-        } else {
-          setFormData((prev) => ({ ...prev, image: compressedBase64 }));
+        // Set compressed image
+        setFormData((prev) => ({ ...prev, image: compressedBase64 }));
+
+        // 3. Try to upload to Cloudinary (optional optimization)
+        try {
+          const res = await ApiClient.post('/upload', {
+            image: compressedBase64,
+            folder: 'shamil_marketplace/categories',
+          });
+          if (res?.data?.url) {
+            setFormData((prev) => ({ ...prev, image: res.data.url }));
+          }
+        } catch (uploadApiErr) {
+          console.warn('Cloudinary upload endpoint unavailable, keeping local compressed image:', uploadApiErr.message);
         }
       } catch (err) {
-        console.error('Failed to compress/upload category image:', err);
+        console.error('Failed to compress category image:', err);
       } finally {
         setIsUploadingImage(false);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        if (e.target) {
+          e.target.value = '';
+        }
       }
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageLoadError(false);
+    setFormData((prev) => ({ ...prev, image: '' }));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -681,73 +716,170 @@ export const CategoriesList = ({ defaultTab = 'categories' }) => {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {/* File Upload Box */}
-                    <label className="flex flex-col items-center justify-center p-4 rounded-2xl border-2 border-dashed border-slate-200 hover:border-[#6339f4] bg-[#f8f9fd] hover:bg-[#ece8ff]/30 cursor-pointer transition-all text-center group">
-                      <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-xs text-[#6339f4] mb-2 group-hover:scale-110 transition-transform">
-                        {isUploadingImage ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
-                      </div>
-                      <span className="text-xs font-bold text-[#181829]">
-                        {isUploadingImage ? 'Uploading to Cloudinary...' : 'Choose Image File'}
-                      </span>
-                      <span className="text-[10px] text-slate-400 mt-0.5">
-                        {isUploadingImage ? 'Please wait...' : 'PNG, JPG, WEBP (Cloudinary auto-optimized)'}
-                      </span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        disabled={isUploadingImage}
-                        onChange={handleCategoryImageUpload}
-                        className="hidden"
-                      />
-                    </label>
+                    {/* Left Box: Live Preview Box when image exists, or File Upload Box when empty */}
+                    {formData.image ? (
+                      <div className="relative group rounded-2xl overflow-hidden border-2 border-[#6339f4]/30 bg-slate-900 flex items-center justify-center min-h-[140px] shadow-sm">
+                        {!imageLoadError ? (
+                          <img
+                            src={formData.image}
+                            alt="Category Preview"
+                            className="w-full h-full min-h-[140px] max-h-[170px] object-cover"
+                            onError={() => setImageLoadError(true)}
+                          />
+                        ) : (
+                          <div className="p-4 text-center text-slate-400 space-y-1">
+                            <AlertCircle className="w-7 h-7 mx-auto text-amber-400" />
+                            <span className="text-xs font-bold text-white block">Could Not Load Image</span>
+                            <span className="text-[10px] text-slate-400 block">Check image URL or upload new file</span>
+                          </div>
+                        )}
 
-                    {/* Direct URL Input */}
-                    <div className="flex flex-col justify-center space-y-1.5 p-3 rounded-2xl bg-[#f0f2fb] border border-slate-200">
-                      <span className="text-[10px] font-bold text-[#8a87a6] uppercase tracking-wider">
-                        Or Paste Image URL
-                      </span>
+                        {/* Uploading Spinner Overlay */}
+                        {isUploadingImage && (
+                          <div className="absolute inset-0 bg-black/75 backdrop-blur-xs flex flex-col items-center justify-center text-white p-3 text-center">
+                            <Loader2 className="w-6 h-6 animate-spin text-[#6339f4] mb-1.5" />
+                            <span className="text-xs font-bold">Uploading & Optimizing...</span>
+                            <span className="text-[10px] text-slate-300">Processing Cloudinary format</span>
+                          </div>
+                        )}
+
+                        {/* Hover Overlay with Change & Remove actions */}
+                        {!isUploadingImage && (
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-3">
+                            <label className="px-3 py-1.5 rounded-xl bg-white text-[#6339f4] text-xs font-bold cursor-pointer transition-all flex items-center gap-1.5 shadow-md hover:scale-105 hover:bg-slate-50">
+                              <Upload className="w-3.5 h-3.5" />
+                              <span>Change</span>
+                              <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                disabled={isUploadingImage}
+                                onChange={handleCategoryImageUpload}
+                                className="hidden"
+                              />
+                            </label>
+                            <button
+                              type="button"
+                              onClick={handleRemoveImage}
+                              className="px-3 py-1.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-md hover:scale-105"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>Remove</span>
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Top-Right Quick Remove Button (Always accessible) */}
+                        {!isUploadingImage && (
+                          <button
+                            type="button"
+                            onClick={handleRemoveImage}
+                            title="Remove image"
+                            className="absolute top-2 right-2 w-7 h-7 rounded-xl bg-black/50 hover:bg-rose-600 text-white flex items-center justify-center backdrop-blur-sm transition-all shadow-xs"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+
+                        {/* Bottom Status Badge */}
+                        {!isUploadingImage && !imageLoadError && (
+                          <div className="absolute bottom-2 left-2 px-2.5 py-1 rounded-xl bg-black/60 backdrop-blur-md text-[10px] font-bold text-emerald-400 flex items-center gap-1.5 shadow-xs">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                            <span>Preview Ready</span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      /* File Upload Box (Empty state) */
+                      <label className="flex flex-col items-center justify-center p-4 min-h-[140px] rounded-2xl border-2 border-dashed border-slate-200 hover:border-[#6339f4] bg-[#f8f9fd] hover:bg-[#ece8ff]/30 cursor-pointer transition-all text-center group">
+                        <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-xs text-[#6339f4] mb-2 group-hover:scale-110 transition-transform">
+                          {isUploadingImage ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
+                        </div>
+                        <span className="text-xs font-bold text-[#181829]">
+                          {isUploadingImage ? 'Uploading to Cloudinary...' : 'Choose Image File'}
+                        </span>
+                        <span className="text-[10px] text-slate-400 mt-0.5">
+                          {isUploadingImage ? 'Please wait...' : 'PNG, JPG, WEBP (Cloudinary auto-optimized)'}
+                        </span>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          disabled={isUploadingImage}
+                          onChange={handleCategoryImageUpload}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+
+                    {/* Right Box: Direct URL Input */}
+                    <div className="flex flex-col justify-center space-y-2 p-3.5 rounded-2xl bg-[#f0f2fb] border border-slate-200">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-[#8a87a6] uppercase tracking-wider">
+                          Or Paste Image URL
+                        </span>
+                        {formData.image && (
+                          <button
+                            type="button"
+                            onClick={handleRemoveImage}
+                            className="text-[10px] text-rose-500 hover:text-rose-600 font-bold"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
                       <div className="relative">
                         <ImageIcon className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                         <input
                           type="url"
                           value={formData.image}
-                          onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                          onChange={(e) => {
+                            setImageLoadError(false);
+                            setFormData({ ...formData, image: e.target.value });
+                          }}
                           placeholder="https://images.unsplash.com/..."
                           className="w-full pl-9 pr-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-medium text-[#181829] focus:outline-none focus:border-[#6339f4] transition-all"
                         />
                       </div>
+                      <span className="text-[10px] text-slate-400">
+                        {formData.image
+                          ? 'Image loaded and preview ready above'
+                          : 'Paste any web photo URL or use the file picker on the left'}
+                      </span>
                     </div>
                   </div>
 
-                  {formData.image && (
-                    <div className="flex items-center justify-between p-3 bg-white rounded-2xl border border-slate-200 shadow-2xs">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200 shadow-2xs">
-                          <img
-                            src={formData.image}
-                            alt="Category Preview"
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.target.style.display = 'none';
-                            }}
-                          />
-                        </div>
-                        <div>
-                          <span className="text-xs font-bold text-slate-800 block">Category Image Loaded</span>
-                          <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
-                            <CheckCircle2 className="w-3 h-3" /> Ready for catalog & storefront display
-                          </span>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setFormData({ ...formData, image: '' })}
-                        className="px-3 py-1.5 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 text-xs font-bold transition-all"
-                      >
-                        Remove
-                      </button>
+                  {/* Preset Photos for 1-click selection */}
+                  <div className="p-3 rounded-2xl bg-[#f0f2fb] border border-slate-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-bold text-[#8a87a6] uppercase tracking-wider">
+                        Quick Preset High-Res Photos
+                      </span>
+                      <span className="text-[10px] text-slate-400">Click to autofill photo</span>
                     </div>
-                  )}
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                      {PRESET_CATEGORIES.map((preset, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => {
+                            setImageLoadError(false);
+                            setFormData((prev) => ({ ...prev, image: preset.image }));
+                          }}
+                          className={`flex items-center space-x-2 p-1.5 rounded-xl border bg-white text-left transition-all hover:border-[#6339f4] hover:shadow-xs group ${
+                            formData.image === preset.image ? 'border-[#6339f4] ring-2 ring-[#6339f4]/20' : 'border-slate-200'
+                          }`}
+                        >
+                          <img
+                            src={preset.image}
+                            alt={preset.name}
+                            className="w-7 h-7 rounded-lg object-cover shrink-0 group-hover:scale-105 transition-transform"
+                          />
+                          <span className="text-[10px] font-bold text-slate-700 truncate">{preset.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
                 {/* 4. Active Toggle */}
@@ -818,19 +950,19 @@ export const CategoriesList = ({ defaultTab = 'categories' }) => {
               {/* Mock Marketplace Category Card */}
               <div className="rounded-2xl overflow-hidden border border-slate-200/80 shadow-md bg-white">
                 <div className="h-44 bg-slate-100 relative overflow-hidden flex items-center justify-center">
-                  {formData.image ? (
+                  {formData.image && !imageLoadError ? (
                     <img
                       src={formData.image}
                       alt="Category Preview"
                       className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                      }}
+                      onError={() => setImageLoadError(true)}
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-[#6339f4]/10 to-slate-200 flex flex-col items-center justify-center text-slate-400 space-y-1">
                       <ImageIcon className="w-8 h-8 opacity-40 text-[#6339f4]" />
-                      <span className="text-[11px] font-medium text-slate-400">No Image Provided</span>
+                      <span className="text-[11px] font-medium text-slate-400">
+                        {imageLoadError ? 'Could Not Load Image' : 'No Image Provided'}
+                      </span>
                     </div>
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent"></div>
