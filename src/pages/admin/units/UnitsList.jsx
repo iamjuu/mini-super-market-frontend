@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import ApiClient from '../../../api/client';
 import { ConfirmDialog } from '../../../components/common/Modal';
+import { Pagination } from '../../../components/common/Pagination';
 
 export const UnitsList = ({ embedded = false, externalAddTrigger = 0, onUnitUpdated }) => {
   const [units, setUnits] = useState([]);
@@ -29,6 +30,10 @@ export const UnitsList = ({ embedded = false, externalAddTrigger = 0, onUnitUpda
   const [isLoading, setIsLoading] = useState(true);
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 8;
 
   // Form State
   const [formData, setFormData] = useState({
@@ -76,6 +81,10 @@ export const UnitsList = ({ embedded = false, externalAddTrigger = 0, onUnitUpda
   }, [statusFilter]);
 
   useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter]);
+
+  useEffect(() => {
     if (externalAddTrigger > 0) {
       handleOpenAdd();
     }
@@ -83,6 +92,7 @@ export const UnitsList = ({ embedded = false, externalAddTrigger = 0, onUnitUpda
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
+    setCurrentPage(1);
     fetchUnits();
   };
 
@@ -443,6 +453,10 @@ export const UnitsList = ({ embedded = false, externalAddTrigger = 0, onUnitUpda
   // ==========================================
   // VIEW: UNITS CATALOG (LIST / GRID)
   // ==========================================
+  const totalUnits = units.length;
+  const totalPages = Math.ceil(totalUnits / pageSize) || 1;
+  const paginatedUnits = units.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
   return (
     <div className="space-y-6 pb-16">
       {/* 1. Header Banner & Main Actions */}
@@ -578,7 +592,7 @@ export const UnitsList = ({ embedded = false, externalAddTrigger = 0, onUnitUpda
       ) : viewMode === 'grid' ? (
         /* GRID VIEW */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {units.map((unit) => (
+          {paginatedUnits.map((unit) => (
             <div
               key={unit._id}
               className="bg-white rounded-3xl p-5 border border-slate-200/80 hover:border-[#6339f4]/40 hover:shadow-xl transition-all flex flex-col justify-between space-y-4 group"
@@ -649,7 +663,7 @@ export const UnitsList = ({ embedded = false, externalAddTrigger = 0, onUnitUpda
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-[#181829]">
-                {units.map((unit) => (
+                {paginatedUnits.map((unit) => (
                   <tr key={unit._id} className="hover:bg-slate-50/80 transition-colors">
                     <td className="py-3.5 px-4 font-bold text-[#181829]">{unit.name}</td>
                     <td className="py-3.5 px-4 font-mono font-bold text-[#6339f4]">
@@ -703,6 +717,22 @@ export const UnitsList = ({ embedded = false, externalAddTrigger = 0, onUnitUpda
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {/* Units Pagination */}
+      {!isLoading && units.length > 0 && (
+        <div className="bg-white rounded-3xl p-4 border border-slate-200/80 shadow-xs">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalUnits}
+            pageSize={pageSize}
+            onPageChange={(p) => {
+              setCurrentPage(p);
+            }}
+            itemName="units"
+          />
         </div>
       )}
 

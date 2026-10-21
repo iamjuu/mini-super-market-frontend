@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import ApiClient from '../../../api/client';
 import { Modal, ConfirmDialog } from '../../../components/common/Modal';
+import { Pagination } from '../../../components/common/Pagination';
 import { compressImage } from '../../../utils/imageCompressor';
 
 const PRESET_BRANDS = [
@@ -93,6 +94,10 @@ export const BrandsList = () => {
   const [pageMode, setPageMode] = useState('list'); // 'list' | 'add' | 'edit'
   const [isLoading, setIsLoading] = useState(true);
 
+  // Pagination State (Brands)
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 8;
+
   // Modals & Target States
   const [selectedBrand, setSelectedBrand] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -151,11 +156,17 @@ export const BrandsList = () => {
   }, []);
 
   useEffect(() => {
+    setCurrentPage(1);
     fetchBrands();
   }, [selectedCategoryFilter, statusFilter]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+
   const handleSearchSubmit = (e) => {
     e.preventDefault();
+    setCurrentPage(1);
     fetchBrands();
   };
 
@@ -654,6 +665,11 @@ export const BrandsList = () => {
   // ==========================================
   // VIEW: MAIN BRANDS LIST (TABLE & GRID)
   // ==========================================
+  const safeBrands = Array.isArray(brands) ? brands : [];
+  const totalBrands = safeBrands.length;
+  const totalPages = Math.ceil(totalBrands / pageSize) || 1;
+  const paginatedBrands = safeBrands.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
   return (
     <div className="space-y-6 pb-16">
       {/* 1. Header Banner & Actions */}
@@ -823,7 +839,7 @@ export const BrandsList = () => {
       ) : viewMode === 'grid' ? (
         /* GRID VIEW */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {brands.map((brand) => (
+          {paginatedBrands.map((brand) => (
             <div
               key={brand._id}
               className="bg-white rounded-3xl p-5 border border-slate-200/80 hover:border-[#6339f4]/40 hover:shadow-xl transition-all flex flex-col justify-between space-y-4 group"
@@ -908,7 +924,7 @@ export const BrandsList = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-[#181829]">
-                {brands.map((brand) => (
+                {paginatedBrands.map((brand) => (
                   <tr key={brand._id} className="hover:bg-slate-50/80 transition-colors">
                     <td className="py-3.5 px-4">
                       <div className="flex items-center space-x-3">
@@ -967,6 +983,23 @@ export const BrandsList = () => {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {/* Brands Pagination */}
+      {!isLoading && brands.length > 0 && (
+        <div className="bg-white rounded-3xl p-4 border border-slate-200/80 shadow-xs">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalBrands}
+            pageSize={pageSize}
+            onPageChange={(p) => {
+              setCurrentPage(p);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            itemName="brands"
+          />
         </div>
       )}
 

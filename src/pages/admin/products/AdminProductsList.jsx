@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import ApiClient from '../../../api/client';
 import { ConfirmDialog, Modal } from '../../../components/common/Modal';
+import { Pagination } from '../../../components/common/Pagination';
 import { cn } from '../../../lib/utils';
 import { compressImage } from '../../../utils/imageCompressor';
 
@@ -122,8 +123,13 @@ export const AdminProductsList = ({ onNavigate }) => {
   const [formSuccess, setFormSuccess] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Pagination State (Products)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [pagination, setPagination] = useState({ total: 0, pages: 1, limit: 10 });
+
   // 1. Fetch Products
-  const fetchProducts = async () => {
+  const fetchProducts = async (page = currentPage) => {
     setIsLoading(true);
     try {
       const params = {
@@ -133,11 +139,23 @@ export const AdminProductsList = ({ onNavigate }) => {
         status: statusFilter || undefined,
         search: search || undefined,
         isBestOffer: bestOffersOnly ? true : undefined,
+        page,
+        limit: pageSize,
       };
       const res = await ApiClient.get('/products', params);
       if (res?.success) {
         const list = Array.isArray(res.data) ? res.data : (res.data?.products || []);
         setProducts(list);
+        if (res.pagination) {
+          setPagination(res.pagination);
+        } else {
+          setPagination({
+            total: list.length,
+            pages: Math.ceil(list.length / pageSize) || 1,
+            limit: pageSize,
+            page,
+          });
+        }
       }
     } catch (err) {
       console.error('Failed to load products:', err);
@@ -187,8 +205,17 @@ export const AdminProductsList = ({ onNavigate }) => {
   }, []);
 
   useEffect(() => {
-    fetchProducts();
+    setCurrentPage(1);
+    fetchProducts(1);
   }, [selectedCategoryFilter, selectedSubcategoryFilter, selectedBrandFilter, statusFilter, bestOffersOnly]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setCurrentPage(1);
+      fetchProducts(1);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   // Load Subcategories when Category is selected in Product Form
   const handleCategoryChange = async (catId) => {
@@ -1529,6 +1556,24 @@ export const AdminProductsList = ({ onNavigate }) => {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Products Pagination */}
+      {!isLoading && (pagination.total > 0 || products.length > 0) && (
+        <div className="bg-white rounded-3xl p-4 border border-gray-200/80 shadow-2xs">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={pagination.pages || 1}
+            totalItems={pagination.total || products.length}
+            pageSize={pagination.limit || pageSize}
+            onPageChange={(page) => {
+              setCurrentPage(page);
+              fetchProducts(page);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            itemName="products"
+          />
         </div>
       )}
 

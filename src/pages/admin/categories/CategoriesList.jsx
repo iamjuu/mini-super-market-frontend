@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 import ApiClient from '../../../api/client';
 import { ConfirmDialog, Modal } from '../../../components/common/Modal';
+import { Pagination } from '../../../components/common/Pagination';
 import { compressImage } from '../../../utils/imageCompressor';
 import { UnitsList } from '../units/UnitsList';
 
@@ -99,6 +100,12 @@ export const CategoriesList = ({ defaultTab = 'categories' }) => {
   const [activeCatalogTab, setActiveCatalogTab] = useState(defaultTab); // 'categories' | 'subcategories' | 'units'
   const [addUnitTrigger, setAddUnitTrigger] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Pagination State (Categories & Subcategories)
+  const [categoriesPage, setCategoriesPage] = useState(1);
+  const categoriesPageSize = 8;
+  const [subcategoriesPage, setSubcategoriesPage] = useState(1);
+  const subcategoriesPageSize = 8;
 
   // All Subcategories across all categories (for Subcategories Master tab)
   const [allSubcategories, setAllSubcategories] = useState([]);
@@ -296,8 +303,17 @@ export const CategoriesList = ({ defaultTab = 'categories' }) => {
     fetchAllSubcategories();
   }, [statusFilter]);
 
+  useEffect(() => {
+    setCategoriesPage(1);
+  }, [search, statusFilter]);
+
+  useEffect(() => {
+    setSubcategoriesPage(1);
+  }, [subcatCategoryFilter, subcatSearch]);
+
   const handleSearchSubmit = (e) => {
     e.preventDefault();
+    setCategoriesPage(1);
     fetchCategories();
   };
 
@@ -598,6 +614,12 @@ export const CategoriesList = ({ defaultTab = 'categories' }) => {
 
   const safeCategories = Array.isArray(categories) ? categories : [];
   const activeCount = safeCategories.filter((c) => c.isActive).length;
+  const totalCategories = safeCategories.length;
+  const totalCategoryPages = Math.ceil(totalCategories / categoriesPageSize) || 1;
+  const paginatedCategories = safeCategories.slice(
+    (categoriesPage - 1) * categoriesPageSize,
+    categoriesPage * categoriesPageSize
+  );
 
   // ==========================================
   // VIEW: FULL PAGE ADD / EDIT CATEGORY (NO MODAL)
@@ -1022,6 +1044,13 @@ export const CategoriesList = ({ defaultTab = 'categories' }) => {
     return true;
   });
 
+  const totalSubcategories = filteredSubcategories.length;
+  const totalSubcategoryPages = Math.ceil(totalSubcategories / subcategoriesPageSize) || 1;
+  const paginatedSubcategories = filteredSubcategories.slice(
+    (subcategoriesPage - 1) * subcategoriesPageSize,
+    subcategoriesPage * subcategoriesPageSize
+  );
+
   return (
     <div className="space-y-6 pb-16">
       {/* 1. Header Banner & Main Actions */}
@@ -1238,7 +1267,7 @@ export const CategoriesList = ({ defaultTab = 'categories' }) => {
             </div>
           ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {safeCategories.map((cat) => (
+              {paginatedCategories.map((cat) => (
                 <div
                   key={cat._id}
                   className="theme-card rounded-3xl overflow-hidden flex flex-col justify-between hover:border-purple-200 transition-all group"
@@ -1355,7 +1384,7 @@ export const CategoriesList = ({ defaultTab = 'categories' }) => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-[#181829]">
-                    {safeCategories.map((cat) => (
+                    {paginatedCategories.map((cat) => (
                       <tr key={cat._id} className="hover:bg-slate-50/80 transition-colors">
                         <td className="py-3 px-4">
                           <div className="flex items-center space-x-3">
@@ -1425,6 +1454,23 @@ export const CategoriesList = ({ defaultTab = 'categories' }) => {
                   </tbody>
                 </table>
               </div>
+            </div>
+          )}
+
+          {/* Categories Pagination */}
+          {!isLoading && safeCategories.length > 0 && (
+            <div className="bg-white rounded-3xl p-4 border border-slate-200/80 shadow-xs">
+              <Pagination
+                currentPage={categoriesPage}
+                totalPages={totalCategoryPages}
+                totalItems={totalCategories}
+                pageSize={categoriesPageSize}
+                onPageChange={(p) => {
+                  setCategoriesPage(p);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                itemName="categories"
+              />
             </div>
           )}
         </>
@@ -1524,7 +1570,7 @@ export const CategoriesList = ({ defaultTab = 'categories' }) => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-[#181829]">
-                    {filteredSubcategories.map((sub) => {
+                    {paginatedSubcategories.map((sub) => {
                       const parentCat =
                         safeCategories.find(
                           (c) => c._id === (sub.categoryId?._id || sub.categoryId)
@@ -1596,6 +1642,22 @@ export const CategoriesList = ({ defaultTab = 'categories' }) => {
                   </tbody>
                 </table>
               </div>
+
+              {/* Subcategories Pagination */}
+              {!isAllSubcategoriesLoading && filteredSubcategories.length > 0 && (
+                <div className="p-4 border-t border-slate-100 bg-white">
+                  <Pagination
+                    currentPage={subcategoriesPage}
+                    totalPages={totalSubcategoryPages}
+                    totalItems={totalSubcategories}
+                    pageSize={subcategoriesPageSize}
+                    onPageChange={(p) => {
+                      setSubcategoriesPage(p);
+                    }}
+                    itemName="subcategories"
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>
