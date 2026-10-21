@@ -86,6 +86,19 @@ export const AdminSidebar = ({ currentRoute, onRouteChange }) => {
             <span>Subcategories</span>
           </button>
 
+          {/* Units / Allowed Units */}
+          <button
+            onClick={() => onRouteChange('units')}
+            className={`w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl font-medium transition-all ${
+              isActive('units')
+                ? 'bg-white text-[#18308c] font-bold shadow-lg shadow-black/10'
+                : 'text-white/80 hover:text-white hover:bg-white/10'
+            }`}
+          >
+            <Scale className="w-4 h-4 shrink-0" />
+            <span>Allowed Units</span>
+          </button>
+
           {/* Brands */}
           <button
             onClick={() => onRouteChange('brands')}

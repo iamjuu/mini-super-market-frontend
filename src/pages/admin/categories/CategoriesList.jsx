@@ -39,6 +39,7 @@ import {
 import ApiClient from '../../../api/client';
 import { ConfirmDialog, Modal } from '../../../components/common/Modal';
 import { compressImage } from '../../../utils/imageCompressor';
+import { UnitsList } from '../units/UnitsList';
 
 // Preset icon options for quick selection
 const ICON_OPTIONS = [
@@ -95,7 +96,8 @@ export const CategoriesList = ({ defaultTab = 'categories' }) => {
   const [statusFilter, setStatusFilter] = useState('');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'table'
   const [pageMode, setPageMode] = useState('list'); // 'list' | 'add' | 'edit'
-  const [activeCatalogTab, setActiveCatalogTab] = useState(defaultTab); // 'categories' | 'subcategories'
+  const [activeCatalogTab, setActiveCatalogTab] = useState(defaultTab); // 'categories' | 'subcategories' | 'units'
+  const [addUnitTrigger, setAddUnitTrigger] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   // All Subcategories across all categories (for Subcategories Master tab)
@@ -180,6 +182,7 @@ export const CategoriesList = ({ defaultTab = 'categories' }) => {
       console.error('Failed to load units:', err);
     }
   };
+  const fetchAvailableUnits = fetchUnits;
 
   // 3. Fetch Subcategories for a Category
   const fetchSubcategories = async (categoryId) => {
@@ -1025,16 +1028,28 @@ export const CategoriesList = ({ defaultTab = 'categories' }) => {
       <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center space-x-3">
           <div className="p-3 rounded-2xl bg-[#6339f4]/10 text-[#6339f4] ring-4 ring-[#ece8ff]">
-            {activeCatalogTab === 'categories' ? <Layers className="w-6 h-6" /> : <FolderTree className="w-6 h-6" />}
+            {activeCatalogTab === 'categories' ? (
+              <Layers className="w-6 h-6" />
+            ) : activeCatalogTab === 'subcategories' ? (
+              <FolderTree className="w-6 h-6" />
+            ) : (
+              <Scale className="w-6 h-6" />
+            )}
           </div>
           <div>
             <h2 className="text-base font-black text-[#181829] tracking-tight">
-              {activeCatalogTab === 'categories' ? 'Product Category Catalog' : 'Subcategories & Unit Restrictions'}
+              {activeCatalogTab === 'categories'
+                ? 'Product Category Catalog'
+                : activeCatalogTab === 'subcategories'
+                ? 'Subcategories & Unit Restrictions'
+                : 'Measurement Units & Packaging'}
             </h2>
             <p className="text-xs text-[#8a87a6] font-medium">
               {activeCatalogTab === 'categories'
                 ? 'Organize marketplace items into primary categories with storefront banners and icons.'
-                : 'Manage subcategories linked to parent categories with admin-governed unit types for shop listings.'}
+                : activeCatalogTab === 'subcategories'
+                ? 'Manage subcategories linked to parent categories with admin-governed unit types for shop listings.'
+                : 'Define and manage standard measurement units (kg, g, litre, ml, piece, pack) available to vendors.'}
             </p>
           </div>
         </div>
@@ -1058,13 +1073,21 @@ export const CategoriesList = ({ defaultTab = 'categories' }) => {
                 <span>Add Category</span>
               </button>
             </>
-          ) : (
+          ) : activeCatalogTab === 'subcategories' ? (
             <button
               onClick={() => handleOpenAddQuickSubcategory(subcatCategoryFilter !== 'ALL' ? subcatCategoryFilter : '')}
               className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-2xl bg-[#6339f4] hover:bg-[#5327ec] text-xs font-bold text-white transition-all shadow-md shadow-[#6339f4]/25 active:scale-95"
             >
               <Plus className="w-4 h-4" />
               <span>Add Subcategory</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => setAddUnitTrigger((prev) => prev + 1)}
+              className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-2xl bg-[#6339f4] hover:bg-[#5327ec] text-xs font-bold text-white transition-all shadow-md shadow-[#6339f4]/25 active:scale-95"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Unit Type</span>
             </button>
           )}
         </div>
@@ -1097,6 +1120,21 @@ export const CategoriesList = ({ defaultTab = 'categories' }) => {
         >
           <FolderTree className="w-4 h-4" />
           <span>Subcategories Master ({allSubcategories.length})</span>
+        </button>
+
+        <button
+          onClick={() => {
+            setActiveCatalogTab('units');
+            fetchAvailableUnits();
+          }}
+          className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center space-x-2 ${
+            activeCatalogTab === 'units'
+              ? 'bg-[#6339f4] text-white shadow-md shadow-[#6339f4]/20'
+              : 'bg-white text-[#8a87a6] hover:text-[#181829] border border-slate-200/80'
+          }`}
+        >
+          <Scale className="w-4 h-4" />
+          <span>Allowed Units ({availableUnits.length})</span>
         </button>
       </div>
 
@@ -1390,7 +1428,7 @@ export const CategoriesList = ({ defaultTab = 'categories' }) => {
             </div>
           )}
         </>
-      ) : (
+      ) : activeCatalogTab === 'subcategories' ? (
         /* SUBCATEGORIES MASTER VIEW */
         <div className="space-y-6">
           {/* Subcategories Metrics */}
@@ -1561,6 +1599,13 @@ export const CategoriesList = ({ defaultTab = 'categories' }) => {
             </div>
           )}
         </div>
+      ) : (
+        /* ALLOWED UNITS GOVERNANCE VIEW */
+        <UnitsList
+          embedded={true}
+          externalAddTrigger={addUnitTrigger}
+          onUnitUpdated={fetchAvailableUnits}
+        />
       )}
 
       {/* QUICK ADD / EDIT SUBCATEGORY MODAL */}
@@ -1630,9 +1675,22 @@ export const CategoriesList = ({ defaultTab = 'categories' }) => {
               <span>
                 Allowed Units <span className="text-rose-500">*</span>
               </span>
-              <span className="text-[10px] text-[#8a87a6] font-normal">
-                Vendors can only list with checked units
-              </span>
+              <div className="flex items-center space-x-2">
+                <span className="text-[10px] text-[#8a87a6] font-normal">
+                  Vendors can only list with checked units
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsQuickSubModalOpen(false);
+                    setActiveCatalogTab('units');
+                  }}
+                  className="text-[10px] font-bold text-[#6339f4] hover:underline flex items-center gap-0.5 ml-2 cursor-pointer"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>Manage Units</span>
+                </button>
+              </div>
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-[#f0f2fb] p-3 rounded-2xl border border-slate-200/80 max-h-48 overflow-y-auto">
               {availableUnits.map((u) => {

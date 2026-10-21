@@ -20,7 +20,7 @@ import {
 import ApiClient from '../../../api/client';
 import { ConfirmDialog } from '../../../components/common/Modal';
 
-export const UnitsList = () => {
+export const UnitsList = ({ embedded = false, externalAddTrigger = 0, onUnitUpdated }) => {
   const [units, setUnits] = useState([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -74,6 +74,12 @@ export const UnitsList = () => {
   useEffect(() => {
     fetchUnits();
   }, [statusFilter]);
+
+  useEffect(() => {
+    if (externalAddTrigger > 0) {
+      handleOpenAdd();
+    }
+  }, [externalAddTrigger]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -140,6 +146,7 @@ export const UnitsList = () => {
 
       if (response.success) {
         setFormSuccess(response.message || 'Unit saved successfully!');
+        onUnitUpdated?.();
         setTimeout(() => {
           setPageMode('list');
           fetchUnits();
@@ -160,6 +167,7 @@ export const UnitsList = () => {
         isActive: !unit.isActive,
       });
       fetchUnits();
+      onUnitUpdated?.();
     } catch (err) {
       console.error('Failed to toggle status:', err);
     }
@@ -172,6 +180,7 @@ export const UnitsList = () => {
       if (res.success) {
         setDeleteTarget(null);
         fetchUnits();
+        onUnitUpdated?.();
       } else {
         alert(res.message || 'Cannot delete unit');
       }
@@ -437,29 +446,31 @@ export const UnitsList = () => {
   return (
     <div className="space-y-6 pb-16">
       {/* 1. Header Banner & Main Actions */}
-      <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center space-x-3">
-          <div className="p-3 rounded-2xl bg-[#6339f4]/10 text-[#6339f4] ring-4 ring-[#ece8ff]">
-            <Scale className="w-6 h-6" />
+      {!embedded && (
+        <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center space-x-3">
+            <div className="p-3 rounded-2xl bg-[#6339f4]/10 text-[#6339f4] ring-4 ring-[#ece8ff]">
+              <Scale className="w-6 h-6" />
+            </div>
+            <div>
+              <h2 className="text-base font-black text-[#181829] tracking-tight">
+                Unit Type Governance
+              </h2>
+              <p className="text-xs text-[#8a87a6] font-medium">
+                Admin-controlled measurement units (kg, g, litre, ml, piece, pack). Shop Owners can only select units configured for their subcategory.
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-base font-black text-[#181829] tracking-tight">
-              Unit Type Governance
-            </h2>
-            <p className="text-xs text-[#8a87a6] font-medium">
-              Admin-controlled measurement units (kg, g, litre, ml, piece, pack). Shop Owners can only select units configured for their subcategory.
-            </p>
-          </div>
-        </div>
 
-        <button
-          onClick={handleOpenAdd}
-          className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-2xl bg-[#6339f4] hover:bg-[#5327ec] text-xs font-bold text-white transition-all shadow-md shadow-[#6339f4]/25 self-start md:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add Unit Type</span>
-        </button>
-      </div>
+          <button
+            onClick={handleOpenAdd}
+            className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-2xl bg-[#6339f4] hover:bg-[#5327ec] text-xs font-bold text-white transition-all shadow-md shadow-[#6339f4]/25 self-start md:self-auto"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add Unit Type</span>
+          </button>
+        </div>
+      )}
 
       {/* 2. Metrics Bar */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

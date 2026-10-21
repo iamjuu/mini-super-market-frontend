@@ -52,10 +52,13 @@ export const AdminRoutes = ({
       case 'dashboard':
         return <AdminDashboard key={refreshKey} onNavigate={handleAdminNavigate} />;
       case 'categories':
-        return <CategoriesList key={refreshKey} defaultTab="categories" />;
+        return <CategoriesList key={`categories-${refreshKey}`} defaultTab="categories" />;
       case 'subcategories':
       case 'categories-sub':
-        return <CategoriesList key={refreshKey} defaultTab="subcategories" />;
+        return <CategoriesList key={`subcategories-${refreshKey}`} defaultTab="subcategories" />;
+      case 'units':
+      case 'allowed-units':
+        return <CategoriesList key={`units-${refreshKey}`} defaultTab="units" />;
       case 'brands':
         return <BrandsList key={refreshKey} />;
       case 'products':
