@@ -1041,30 +1041,6 @@ export const AdminProductsList = ({ onNavigate }) => {
                 </label>
               </div>
 
-              {/* Delivery Price Override */}
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5 flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <Truck className="w-3.5 h-3.5 text-[#6030ea]" />
-                    <span>Product Delivery Price (₹) (Optional Override)</span>
-                  </span>
-                  <span className="text-[11px] text-gray-400 font-normal">
-                    Leave blank to inherit category rate
-                  </span>
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-2.5 text-xs font-bold text-[#6030ea]">₹</span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="1"
-                    value={formData.deliveryPrice !== undefined ? formData.deliveryPrice : ''}
-                    onChange={(e) => setFormData({ ...formData, deliveryPrice: e.target.value })}
-                    placeholder="e.g. 35 (or leave blank to inherit category rate)"
-                    className="w-full pl-8 pr-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6030ea]/20 focus:border-[#6030ea] font-medium"
-                  />
-                </div>
-              </div>
 
               {/* Status Toggle */}
               <div className="pt-2 flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-200">

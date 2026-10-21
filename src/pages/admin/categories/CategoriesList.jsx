@@ -1446,13 +1446,7 @@ export const CategoriesList = ({ defaultTab = 'categories' }) => {
               </select>
             </div>
 
-            <button
-              onClick={() => handleOpenAddQuickSubcategory(subcatCategoryFilter !== 'ALL' ? subcatCategoryFilter : '')}
-              className="inline-flex items-center justify-center space-x-2 px-5 py-2.5 rounded-2xl bg-[#6339f4] hover:bg-[#5327ec] text-xs font-bold text-white transition-all shadow-md shadow-[#6339f4]/25 shrink-0 active:scale-95"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add Subcategory</span>
-            </button>
+          
           </div>
 
           {/* Subcategories Table */}
